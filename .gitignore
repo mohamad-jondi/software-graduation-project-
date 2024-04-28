@@ -1,0 +1,7 @@
+.vscode/
+.vs/
+bin/
+obj/
+.idea/
+*.nuget.props
+*.nuget.targets
