@@ -24,6 +24,8 @@ namespace Data.DbContexts
         public virtual DbSet<User> Users{ get; set; }
         public virtual DbSet<Vaccination> Vaccinations { get; set; }
 
+        public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

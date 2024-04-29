@@ -1,7 +1,13 @@
 using Data;
 using Data.DbContexts;
 using Data.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Serilog.Events;
+using Serilog;
+using System.Text;
 
 namespace MediConnect_Plus
 {
@@ -20,6 +26,37 @@ namespace MediConnect_Plus
 
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
+            Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.File("logs/myapp-.txt")
+            .CreateLogger();
+
+            builder.Services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddSerilog();
+            });
+            builder.Services.AddAuthentication(k =>
+            {
+                k.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                k.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(p =>
+            {
+                var key = Encoding.UTF8.GetBytes(builder.Configuration["JWTToken:key"]);
+                p.SaveToken= true;
+                p.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = false,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["JWKToekn:key"],
+                    ValidAudience = builder.Configuration["JWKToekn:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                };
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
