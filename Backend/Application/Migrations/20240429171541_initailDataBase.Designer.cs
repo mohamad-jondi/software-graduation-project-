@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240428213543_AddedMyDataBase")]
-    partial class AddedMyDataBase
+    [Migration("20240429171541_initailDataBase")]
+    partial class initailDataBase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -252,6 +252,26 @@ namespace Data.Migrations
                     b.ToTable("EmergencyContactInfos");
                 });
 
+            modelBuilder.Entity("Data.Models.JWTTokensRefresh", b =>
+                {
+                    b.Property<int>("JWTTokensRefreshID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<Guid>("RefreshToken")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("JWTTokensRefreshID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("JWTTokensRefresh");
+                });
+
             modelBuilder.Entity("Data.Models.LifestyleFactors", b =>
                 {
                     b.Property<int>("LifestyleFactorsId")
@@ -330,6 +350,9 @@ namespace Data.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -431,7 +454,7 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("PersonType")
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Person");
@@ -441,12 +464,12 @@ namespace Data.Migrations
                 {
                     b.HasBaseType("Data.Models.Person");
 
+                    b.Property<int>("DoctorWorkType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("type")
-                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Doctor");
                 });
@@ -571,6 +594,17 @@ namespace Data.Migrations
                     b.Navigation("Patient");
 
                     b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("Data.Models.JWTTokensRefresh", b =>
+                {
+                    b.HasOne("Data.Models.User", "user")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
                 });
 
             modelBuilder.Entity("Data.Models.LifestyleFactors", b =>

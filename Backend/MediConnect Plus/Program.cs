@@ -8,11 +8,15 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog.Events;
 using Serilog;
 using System.Text;
+using Domain.Mapper;
+using Domain.IServices;
+using Domain.Services;
 
 namespace MediConnect_Plus
 {
     public class Program
     {
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -23,9 +27,12 @@ namespace MediConnect_Plus
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-            builder.Services.AddScoped<IUnitOfWork , UnitOfWork>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IMailService, MailService>();
+            builder.Services.AddScoped<IJWTTokenServices, JWTTokentService>();
             Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)

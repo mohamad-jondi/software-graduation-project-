@@ -19,10 +19,10 @@ namespace Domain.Services
             _configuration = configuration;
             _context = context;
         }
-        public JWTTokens Authenticate(User user)
+        public async Task<JWTTokens> Authenticate(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
+            var key = Encoding.ASCII.GetBytes(_configuration["JWTToken:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
@@ -36,7 +36,7 @@ namespace Domain.Services
             var tokenString = tokenHandler.WriteToken(token);
             var refreshToken = Guid.NewGuid();
             var x = new JWTTokensRefresh { RefreshToken = refreshToken, UserID = user.Id };
-            _context.GetRepositories<JWTTokensRefresh>().Add(x);
+            await _context.GetRepositories<JWTTokensRefresh>().Add(x);
 
 
             return new JWTTokens

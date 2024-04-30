@@ -1,7 +1,7 @@
-﻿using Data.Models;
-using Domain.DTOs;
+﻿using Microsoft.AspNetCore.Mvc;
+using Domain.DTOs.Login;
 using Domain.IServices;
-using Microsoft.AspNetCore.Mvc;
+using Domain.DTOs;
 
 [ApiController]
 [Route("[controller]")]
@@ -21,8 +21,11 @@ public class UserController : ControllerBase
     {
         try
         {
-            await _userService.Register(model);
-            return Ok("User registered successfully.");
+            var registered = await _userService.Register(model);
+            if (registered)
+                return Ok("User registered successfully.");
+            else
+                return BadRequest("Credentials already used.");
         }
         catch (Exception ex)
         {
@@ -32,19 +35,73 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<JWTTokens>> Login(LoginDTO model)
+    public async Task<ActionResult<JWTTokensDTO>> Login(LoginDTO model)
     {
         try
         {
             var result = await _userService.Login(model);
             if (result != null)
-                return Ok(result.Token);
+                return Ok(result);
             else
                 return Unauthorized();
         }
         catch (Exception ex)
         {
             _logger.LogError($"Failed to authenticate user: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("recover-password-request")]
+    public async Task<IActionResult> RecoverPasswordRequest(RecoverPasswordRequestDTO model)
+    {
+        try
+        {
+            var success = await _userService.RecovePasswordRequest(model);
+            if (success)
+                return Ok("Recovery email sent successfully.");
+            else
+                return BadRequest("Failed to send recovery email.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to send recovery email: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDTO model)
+    {
+        try
+        {
+            var success = await _userService.ResetPassword(model);
+            if (success)
+                return Ok("Password reset successfully.");
+            else
+                return BadRequest("Failed to reset password.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to reset password: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("authenticate-email")]
+    public async Task<IActionResult> AuthenticateEmail(AuthinticateEmailDTO model)
+    {
+        try
+        {
+            var success = await _userService.AuthinticateEmail(model);
+            if (success)
+                return Ok("Email authenticated successfully.");
+            else
+                return BadRequest("Failed to authenticate email.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to authenticate email: {ex.Message}");
             return StatusCode(500, "Internal server error");
         }
     }

@@ -1,7 +1,8 @@
 ﻿using Domain.IServices;
-using System.Net.Mail;
-using System.Net;
 using Microsoft.Extensions.Configuration;
+using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 
 namespace Domain.Services
 {
@@ -16,37 +17,25 @@ namespace Domain.Services
 
         public bool SendMail(string to, string subject, string body)
         {
-            string smtpServer = _configuration["MailSettings:SmtpServer"];
-            int port = int.Parse(_configuration["MailSettings:Port"]);
-            string senderEmail = _configuration["MailSettings:SenderEmail"];
-            string senderPassword = _configuration["MailSettings:SenderPassword"];
-
-
-            MailMessage mail = new MailMessage(senderEmail, to);
-            SmtpClient client = new SmtpClient(senderPassword, port)
-            {
-                Credentials = new NetworkCredential(senderEmail, senderPassword),
-                EnableSsl = true
-            };
-
-            mail.Subject = subject;
-            mail.Body = body;
-            mail.IsBodyHtml = true;
+            
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("", _configuration["MailSettings:SenderEmail"])); 
+            message.To.Add(new MailboxAddress("", to)); 
+            message.Subject = subject;
+            message.Body = new TextPart("plain") { Text = body };
 
             try
             {
-                client.Send(mail);
-                return true;
+                using (var client = new SmtpClient())
+                {
+                    client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                    client.Authenticate(_configuration["MailSettings:SenderEmail"], _configuration["MailSettings:SenderPassword"]);
+                    client.Send(message);
+                    client.Disconnect(true);
+                }
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Failed to send email:");
-            }
-            finally
-            {
-                client.Dispose();
-                mail.Dispose();
-            }
+            catch { return false;  }
+            return true;
         }
     }
-}
+    }

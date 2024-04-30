@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Data.Migrations
 {
-    public partial class AddedMyDataBase : Migration
+    public partial class initailDataBase : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -19,6 +19,7 @@ namespace Data.Migrations
                     UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsEmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     LatestRecordedWeight = table.Column<double>(type: "float", nullable: true),
@@ -26,7 +27,9 @@ namespace Data.Migrations
                     Gender = table.Column<int>(type: "int", nullable: true),
                     MaritalStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Occupation = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Specialization = table.Column<string>(type: "nvarchar(max)", nullable: true), 
+                    PersonType = table.Column<int>(type: "int", nullable: true),
+                    Specialization = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DoctorWorkType = table.Column<int>(type: "int", nullable: true),
                     EmergancyContactID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -237,6 +240,26 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "JWTTokensRefresh",
+                columns: table => new
+                {
+                    JWTTokensRefreshID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RefreshToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserID = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JWTTokensRefresh", x => x.JWTTokensRefreshID);
+                    table.ForeignKey(
+                        name: "FK_JWTTokensRefresh_Users_UserID",
+                        column: x => x.UserID,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LifestyleFactors",
                 columns: table => new
                 {
@@ -401,6 +424,11 @@ namespace Data.Migrations
                 column: "PersonId1");
 
             migrationBuilder.CreateIndex(
+                name: "IX_JWTTokensRefresh_UserID",
+                table: "JWTTokensRefresh",
+                column: "UserID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LifestyleFactors_PatientId",
                 table: "LifestyleFactors",
                 column: "PatientId");
@@ -446,6 +474,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "EmergencyContactInfos");
+
+            migrationBuilder.DropTable(
+                name: "JWTTokensRefresh");
 
             migrationBuilder.DropTable(
                 name: "LifestyleFactors");

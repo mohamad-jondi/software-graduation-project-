@@ -1,5 +1,4 @@
-﻿using Data.enums;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models
 {
@@ -13,6 +12,8 @@ namespace Data.Models
         public string UserType { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
+        public bool IsEmailConfirmed { get; set; }
+        public string RandomStringEmailConfirmations { get; set; }
         public ICollection<Address> Addresses { get; set; }
     }
 

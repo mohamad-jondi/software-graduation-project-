@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240429124138_AddedJWTrefreshToken")]
-    partial class AddedJWTrefreshToken
+    [Migration("20240429173512_addedrandomStringEmailConformation")]
+    partial class addedrandomStringEmailConformation
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -351,6 +351,9 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -360,6 +363,10 @@ namespace Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RandomStringEmailConfirmations")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -451,7 +458,7 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("PersonType")
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Person");
@@ -461,12 +468,12 @@ namespace Data.Migrations
                 {
                     b.HasBaseType("Data.Models.Person");
 
+                    b.Property<int>("DoctorWorkType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("type")
-                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Doctor");
                 });

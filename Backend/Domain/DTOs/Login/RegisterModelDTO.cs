@@ -1,6 +1,6 @@
 ﻿using Data.enums;
 
-namespace Domain.DTOs
+namespace Domain.DTOs.Login
 {
     public class RegisterModelDTO
     {

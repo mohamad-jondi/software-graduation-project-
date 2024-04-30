@@ -1,5 +1,5 @@
-﻿namespace Domain.DTOs
-{  
+﻿namespace Domain.DTOs.Login
+{
     public class LoginDTO
     {
         public string Password { get; set; }

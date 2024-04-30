@@ -5,7 +5,7 @@ namespace Data.Models
     public class Doctor : Person 
     {
         public string Specialization { get; set; }
-        public DoctorWorkType type { get; set; }
+        public DoctorWorkType DoctorWorkType { get; set; }
         public ICollection<Credential> credential { get; set; }
         public ICollection<Chat> Chats { get; set; }
         public ICollection<Callender> Callender { get; set; }
