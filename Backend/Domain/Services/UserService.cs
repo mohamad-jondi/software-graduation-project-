@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.enums;
 using Data.Interfaces;
 using Data.Models;
 using Domain.DTOs;
@@ -107,8 +108,9 @@ namespace Domain.Services
             }
             AddedUser.RandomStringEmailConfirmations = GenerateRandomString(6);
             _mailService.SendMail(AddedUser.Email, "Email Confirmations", $"welcome to mediConnect Plus, your confirmation code is {AddedUser.RandomStringEmailConfirmations}");
-            await _unitOfWork.GetRepositories<User>().Add(AddedUser);
-            return true;
+            if (model.UserType == UserType.Person) await _unitOfWork.GetRepositories<Person>().Add(_mapper.Map<Person>(AddedUser) );
+                                                   //await _unitOfWork.GetRepositories<Person>().Add(AddedUser);
+                return true;
         }
 
         public async Task<bool> ResetPassword(ResetPasswordDTO resetPassword)

@@ -3,7 +3,6 @@ using Data.DbContexts;
 using Data.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Serilog.Events;
 using Serilog;
@@ -11,6 +10,7 @@ using System.Text;
 using Domain.Mapper;
 using Domain.IServices;
 using Domain.Services;
+using Microsoft.OpenApi.Models;
 
 namespace MediConnect_Plus
 {
@@ -33,6 +33,11 @@ namespace MediConnect_Plus
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IJWTTokenServices, JWTTokentService>();
+            builder.Services.AddScoped<IPersonService, PersonService>();
+            builder.Services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddSerilog();
+            });
             Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -40,31 +45,55 @@ namespace MediConnect_Plus
             .WriteTo.File("logs/myapp-.txt")
             .CreateLogger();
 
-            builder.Services.AddLogging(loggingBuilder =>
+            
+            builder.Services.AddAuthentication(options =>
             {
-                loggingBuilder.AddSerilog();
-            });
-            builder.Services.AddAuthentication(k =>
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
             {
-                k.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                k.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(p =>
-            {
-                var key = Encoding.UTF8.GetBytes(builder.Configuration["JWTToken:key"]);
-                p.SaveToken= true;
-                p.TokenValidationParameters = new TokenValidationParameters
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateLifetime = false,
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["JWKToekn:key"],
-                    ValidAudience = builder.Configuration["JWKToekn:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTToken:Key"]))
                 };
             });
+            builder.Services.AddAuthorization();
 
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+
+                // Add JWT Bearer token authorization
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Enter 'Bearer [your_token]'",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                };
+                c.AddSecurityDefinition("Bearer", securityScheme);
+                var securityRequirement = new OpenApiSecurityRequirement
+    {
+        { securityScheme, new[] { "Bearer" } }
+    };
+                c.AddSecurityRequirement(securityRequirement);
+            });
             var app = builder.Build();
+
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -74,7 +103,7 @@ namespace MediConnect_Plus
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

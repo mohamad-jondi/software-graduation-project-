@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Data.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Services
 {
@@ -13,11 +14,13 @@ namespace Domain.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWork _context;
+      
 
         public JWTTokentService(IConfiguration configuration, IUnitOfWork context)
         {
             _configuration = configuration;
             _context = context;
+         
         }
         public async Task<JWTTokens> Authenticate(User user)
         {
@@ -36,7 +39,14 @@ namespace Domain.Services
             var tokenString = tokenHandler.WriteToken(token);
             var refreshToken = Guid.NewGuid();
             var x = new JWTTokensRefresh { RefreshToken = refreshToken, UserID = user.Id };
-            await _context.GetRepositories<JWTTokensRefresh>().Add(x);
+            var ExistingRefreshToken = await _context.GetRepositories<JWTTokensRefresh>().Get().Where(x=> x.UserID ==  user.Id).FirstOrDefaultAsync();
+            if (ExistingRefreshToken == null) await _context.GetRepositories<JWTTokensRefresh>().Add(x);
+
+            else
+            {
+                ExistingRefreshToken.RefreshToken = refreshToken;
+                await _context.GetRepositories<JWTTokensRefresh>().Update(ExistingRefreshToken);
+            }
 
 
             return new JWTTokens
@@ -46,5 +56,11 @@ namespace Domain.Services
             };
         }
 
+        public Task<JWTTokens> AuthenticateUsingRefreshTokenAsync(Guid RefreshToken)
+        {
+           var user = _context.GetRepositories<JWTTokensRefresh>().Get().Include(x=> x.user).Where(x=> x.RefreshToken ==  RefreshToken).FirstOrDefault().user;
+            if (user != null) { return Authenticate(user); }
+            else return null;
+        }
     }
 }
