@@ -13,6 +13,7 @@ namespace Data.DbContexts
         public virtual DbSet<Allergy> Allergies { get; set; }
         public virtual DbSet<Avaliability> Avaliabilities { get; set; }
         public virtual DbSet<Chat> Chats{ get; set; }
+        
         public virtual DbSet<ChatMessage> ChatMessages { get; set; }
         public virtual DbSet<Credential> Credentials { get; set; }
         public virtual DbSet<Doctor> Doctors{ get; set; }
@@ -23,6 +24,7 @@ namespace Data.DbContexts
         public virtual DbSet<Person> Persons { get; set; }
         public virtual DbSet<User> Users{ get; set; }
         public virtual DbSet<Vaccination> Vaccinations { get; set; }
+        public virtual DbSet<Appointment> Appointments { get; set; }
 
         public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
 

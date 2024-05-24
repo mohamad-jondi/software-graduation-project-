@@ -10,7 +10,7 @@ namespace Data.Models
         [ForeignKey("PatientID")]
         public int PatientID { get; set; }
         public Patient? Patient { get; set; } 
-        public string Allergen { get; set; }
+        public string Allergey { get; set; }
         public string ReactionDescription { get; set; }
         public string Severity { get; set; }
     }

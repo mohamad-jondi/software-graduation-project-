@@ -1,6 +1,4 @@
-﻿using Data.enums;
-
-namespace Domain.DTOs.Person
+﻿namespace Domain.DTOs.Person
 {
     public class PersonDTO
     {

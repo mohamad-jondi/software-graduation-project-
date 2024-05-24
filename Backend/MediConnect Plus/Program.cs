@@ -34,6 +34,7 @@ namespace MediConnect_Plus
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IJWTTokenServices, JWTTokentService>();
             builder.Services.AddScoped<IPersonService, PersonService>();
+            builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.AddSerilog();
