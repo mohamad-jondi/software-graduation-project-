@@ -5,3 +5,5 @@ obj/
 .idea/
 *.nuget.props
 *.nuget.targets
+/combined_csharp_code.txt
+/New Text Document.py
