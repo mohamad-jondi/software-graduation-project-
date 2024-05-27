@@ -17,13 +17,13 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterModelDTO model)
+    public async Task<ActionResult<UserDTO>> Register(RegisterModelDTO model)
     {
         try
         {
             var registered = await _userService.Register(model);
-            if (registered)
-                return Ok("User registered successfully.");
+            if (registered != null )
+                return Ok(registered);
             else
                 return BadRequest("Credentials already used.");
         }

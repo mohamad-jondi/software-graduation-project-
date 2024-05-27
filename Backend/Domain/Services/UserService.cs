@@ -96,9 +96,9 @@ namespace Domain.Services
 
             return sb.ToString();
         }
-        public async Task<bool> Register(RegisterModelDTO model)
+        public async Task<UserDTO> Register(RegisterModelDTO model)
         {
-            if (!CheackCredinails(model).Result) return false;
+            if (!CheackCredinails(model).Result) return null;
             var AddedUser = _mapper.Map<User>(model);
             AddedUser.IsEmailConfirmed = false;
             using (SHA256 sha256 = SHA256.Create())
@@ -108,9 +108,10 @@ namespace Domain.Services
             }
             AddedUser.RandomStringEmailConfirmations = GenerateRandomString(6);
             _mailService.SendMail(AddedUser.Email, "Email Confirmations", $"welcome to mediConnect Plus, your confirmation code is {AddedUser.RandomStringEmailConfirmations}");
-            if (model.UserType == UserType.Person) await _unitOfWork.GetRepositories<Person>().Add(_mapper.Map<Person>(AddedUser) );
+            UserDTO x = null;
+            if (model.UserType == UserType.Person)x=_mapper.Map<UserDTO>(await _unitOfWork.GetRepositories<Person>().Add(_mapper.Map<Person>(AddedUser) ));
                                                    //await _unitOfWork.GetRepositories<Person>().Add(AddedUser);
-                return true;
+                return x;
         }
 
         public async Task<bool> ResetPassword(ResetPasswordDTO resetPassword)

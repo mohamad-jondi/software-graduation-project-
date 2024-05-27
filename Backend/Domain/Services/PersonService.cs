@@ -46,6 +46,29 @@ namespace Domain.Services
             return temp;
         }
 
+        public async Task<PersonDTO> editPersonType(string userName,personTypeDTO personTypeDTO)
+        {
+            var existingUser = await _context.GetRepositories<Person>().Get().Where(p=> p.Username == userName).FirstOrDefaultAsync();
+
+            try
+            {
+              
+                existingUser.PersonType = personTypeDTO.PersonType;
+                await _context.GetRepositories<Person>().Delete(existingUser);
+                existingUser.Id = 0;
+                if (personTypeDTO.PersonType == PersonType.Patient) await _context.GetRepositories<Patient>().Add(_mapper.Map<Patient>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Doctor) await _context.GetRepositories<Doctor>().Add(_mapper.Map<Doctor>(existingUser));
+                //if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+
+            }catch (Exception ex)
+            {
+                return null;
+            }
+            return _mapper.Map<PersonDTO>(existingUser);
+
+
+        }
+
         public async Task<PersonDTO> UpdateInfo(InfoUpdateDTO infoUpdate)
         {
             var existingUser = await _context.GetRepositories<Person>().Get().Where(_ => _.Username == infoUpdate.username).FirstOrDefaultAsync();
@@ -54,7 +77,6 @@ namespace Domain.Services
             if (infoUpdate.LatestRecordedHeight.HasValue) existingUser.LatestRecordedHeight = infoUpdate.LatestRecordedHeight.Value;
             if (!infoUpdate.MaritalStatus.IsNullOrEmpty()) existingUser.MaritalStatus= infoUpdate.MaritalStatus;
             if (!infoUpdate.Occupation.IsNullOrEmpty()) existingUser.Occupation= infoUpdate.Occupation;
-            existingUser.PersonType = infoUpdate.PersonType;
             existingUser.Gender = infoUpdate.Gender;
             await _context.GetRepositories<Person>().Update(existingUser);
             var temp = _mapper.Map<PersonDTO>(existingUser);

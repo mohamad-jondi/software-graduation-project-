@@ -7,7 +7,7 @@ namespace Domain.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    //[Authorize]
     public class PersonController : ControllerBase
     {
         private readonly IPersonService _personService;
@@ -18,8 +18,25 @@ namespace Domain.Controllers
             _personService = personService;
             _logger = logger;
         }
+        [HttpPost("EditPersonType/{Username}")]
+        public async Task<ActionResult> editPersonType(string Username,personTypeDTO type)
+        {
+            try
+            {
+                var updatedInfo = await _personService.editPersonType(Username,type);
+                if (updatedInfo != null)
+                    return Ok(updatedInfo);
+                else
+                    return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating person information");
+                return StatusCode(500, "Internal server error");
+            }
+        }
 
-        [HttpPut("update-info")]
+        [HttpPut("updateinfo")]
         public async Task<IActionResult> UpdateInfo(InfoUpdateDTO infoUpdate)
         {
             try

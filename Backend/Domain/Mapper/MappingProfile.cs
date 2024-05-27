@@ -4,6 +4,7 @@ using Domain.DTOs;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.Login;
+using Domain.DTOs.Patient;
 using Domain.DTOs.Person;
 using Domain.DTOs.Vaccination;
 
@@ -15,7 +16,16 @@ namespace Domain.Mapper
         {
             CreateMap<User, RegisterModelDTO>().ReverseMap();
             CreateMap<JWTTokens, JWTTokensDTO>().ReverseMap();
-            CreateMap<Person, PersonDTO>().ReverseMap();
+            CreateMap<User, Person>().ReverseMap();
+            CreateMap<User, Doctor>().ReverseMap();
+            CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<Person, Patient>().ReverseMap();
+            CreateMap<Person, Doctor>().ReverseMap();
+            CreateMap<Patient, PersonDTO>().ReverseMap();
+            CreateMap<Doctor, PersonDTO>().ReverseMap();
+            CreateMap<Patient, PatientFullDTO>().ReverseMap();
+            
+          //  CreateMap<Nurse, PersonDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForOutputDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForInputDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentDTO>().ReverseMap();
