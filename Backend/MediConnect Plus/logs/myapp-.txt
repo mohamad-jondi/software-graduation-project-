@@ -382,3 +382,14 @@ Data.Models.Patient -> Domain.DTOs.Patient.PatientFullDTO
    at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
    at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware.Invoke(HttpContext context)
 2024-05-26 18:46:45.493 +03:00 [Warning] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2024-05-30 09:14:53.025 +03:00 [Error] Failed executing DbCommand ("25"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""CREATE TABLE [DoctorRatings] (
+    [DoctorRatingID] int NOT NULL IDENTITY,
+    [Rating] float NOT NULL,
+    [comment] nvarchar(max) NULL,
+    [DoctorID] int NOT NULL,
+    [UserID] int NOT NULL,
+    CONSTRAINT [PK_DoctorRatings] PRIMARY KEY ([DoctorRatingID]),
+    CONSTRAINT [FK_DoctorRatings_Users_DoctorID] FOREIGN KEY ([DoctorID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_DoctorRatings_Users_UserID] FOREIGN KEY ([UserID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
+);"

@@ -1,7 +1,11 @@
 ﻿namespace Domain.DTOs
 {
-    public class ChatDTO
+    public class ChatForShowingFromTheOutsideDTO
     {
-        public ICollection<ChatMessageDTO> Messages { get; set; }
+        public string PatientUsername { get; set; }
+        public string DoctorUsername { get; set; }
+        public bool IsTheLastSenderMe { get; set; }
+        public string lastSentMassagess{ get; set; }
+        public int numberOfMessages { get; set; }
     }
 }

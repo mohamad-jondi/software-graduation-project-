@@ -15,6 +15,7 @@ namespace Data.Models
         public bool IsEmailConfirmed { get; set; }
         public string RandomStringEmailConfirmations { get; set; }
         public ICollection<Address> Addresses { get; set; }
+        public string ProfilePicture { get; set; }
     }
 
 }

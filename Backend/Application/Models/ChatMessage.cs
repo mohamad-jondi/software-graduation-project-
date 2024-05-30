@@ -13,6 +13,9 @@ namespace Data.Models
         public Chat? Chat { get; set; }
         public PersonType Sender { get; set; }
         public DateTime SentDateTime { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public bool IsRead { get; set; }
         public string MessageContent { get; set; }
     }
 }

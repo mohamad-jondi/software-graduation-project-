@@ -25,6 +25,7 @@ namespace Data.DbContexts
         public virtual DbSet<User> Users{ get; set; }
         public virtual DbSet<Vaccination> Vaccinations { get; set; }
         public virtual DbSet<Appointment> Appointments { get; set; }
+        public virtual DbSet<DoctorRating> DoctorRatings{ get; set; }
 
         public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
 

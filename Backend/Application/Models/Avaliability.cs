@@ -6,9 +6,9 @@ namespace Data.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AvalibailityID { get; set; }
-        public DateTime AvaliabilityTimeStart { get; set; }
-        public DateTime AvaliabilityTimeEnd { get; set; }
-        public DateTime AvaliabilityDate { get; set; }
+        public DayOfWeek DayOfWeek { get; set; } 
+        public TimeSpan StartHour { get; set; }
+        public TimeSpan EndHour { get; set; }
 
         [ForeignKey("DoctorID")]
         public int DoctorID { get; set; }
