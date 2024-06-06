@@ -1,6 +1,7 @@
 ﻿using Domain.DTOs;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
 using Domain.DTOs.Patient;
 using Domain.DTOs.Vaccination;
 
@@ -23,7 +24,11 @@ namespace Domain.IServices
         Task<bool> DeleteVaccination(int vaccinationId);
         Task<VaccinationForOutputDTO> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination);
         Task<PatientFullDTO > ViewFullDetailsPatient(string  PatientUsername);
-        
+
+        Task<LifestyleFactorsDTO> GetLifeStyleFactors(string PatientUsername);
+        Task<LifestyleFactorsDTO> AddLifeStyleFactors(string PatientUsername, LifestyleFactorsDTO LifeStyle);
+        Task<LifestyleFactorsDTO> UpdateLifeStyleFactors(string PatientUsername, LifestyleFactorsForUpdatingDTO LifeStyle);
+
     }
 
 }

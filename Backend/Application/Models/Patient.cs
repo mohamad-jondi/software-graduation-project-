@@ -11,12 +11,9 @@ namespace Data.Models
         [ForeignKey("EmergencyContactInfoID")]
         public int EmergancyContactID { get; set; }
         public EmergencyContactInfo? EmergancyContact { get; set; }
-
-        public ICollection<Operation> operations { get; set; }
+        public LifestyleFactors LifestyleFactors { get; set; }
         public ICollection<Allergy> Allergies { get; set; }
         public ICollection<Vaccination> Vaccinations { get; set; }
-
-        public ICollection<Doctor> Doctors { get; set; }
-
+        public ICollection<Case> cases{ get; set; }
     }
 }

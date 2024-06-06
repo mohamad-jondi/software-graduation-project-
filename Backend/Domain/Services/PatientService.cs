@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Data.enums;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Vaccination;
+using Domain.DTOs.LifestyleFactors;
 
 namespace Domain.Services
 {
@@ -282,8 +283,9 @@ namespace Domain.Services
                 .Include(p => p.EmergancyContact)
                 .Include(p => p.Allergies)
                 .Include(p => p.Vaccinations)
-                .Include(p => p.Doctors)
+                .Include(p => p.cases)
                 .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
 
             if (patient == null)
                 return null;
@@ -292,6 +294,50 @@ namespace Domain.Services
             return patientDTO;
         }
 
+        public async Task<LifestyleFactorsDTO> AddLifeStyleFactors(string PatientUsername, LifestyleFactorsDTO LifeStyle)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+             .Get().Include(c=> c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+
+            if (patient == null)
+                return null;
+            if(patient.LifestyleFactors == null)
+            {
+                patient.LifestyleFactors = _mapper.Map<LifestyleFactors>(LifeStyle);
+            }
+            await _unitOfWork.GetRepositories<Patient>().Update(patient);
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+        }
+
+        public async Task<LifestyleFactorsDTO> UpdateLifeStyleFactors(string PatientUsername, LifestyleFactorsForUpdatingDTO LifeStyle)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+              .Get().Include(c => c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+
+            if (patient == null)
+                return null;
+            if (patient.LifestyleFactors == null)
+            {
+                patient.LifestyleFactors = _mapper.Map<LifestyleFactors>(LifeStyle);
+            }
+            else
+            {
+                patient.LifestyleFactors.DietaryPreferences = !string.IsNullOrEmpty(LifeStyle.DietaryPreferences) ? LifeStyle.DietaryPreferences : patient.LifestyleFactors.DietaryPreferences;
+                patient.LifestyleFactors.IsAlcoholConsumer = LifeStyle.IsAlcoholConsumer.HasValue ?(bool) LifeStyle.IsAlcoholConsumer : patient.LifestyleFactors.IsAlcoholConsumer;
+                patient.LifestyleFactors.IsSmoker = LifeStyle.IsSmoker.HasValue ? (bool)LifeStyle.IsSmoker : patient.LifestyleFactors.IsAlcoholConsumer;
+                patient.LifestyleFactors.ExerciseHabits = !string.IsNullOrEmpty(LifeStyle.ExerciseHabits) ? LifeStyle.ExerciseHabits : patient.LifestyleFactors.ExerciseHabits;
+            }
+            await _unitOfWork.GetRepositories<Patient>().Update(patient);
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+        }
+
+        public async Task<LifestyleFactorsDTO> GetLifeStyleFactors(string PatientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+              .Get().Include(c => c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+
+        }
     }
 
 

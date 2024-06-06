@@ -10,7 +10,7 @@ namespace Data.Models
         public ICollection<Chat> Chats { get; set; }
         public ICollection<Callender> Callender { get; set; }
         public ICollection<Avaliability> Avalible {get; set; }
-        public ICollection<Patient> Patients { get; set; } 
+        public ICollection<Case> Cases { get; set; } 
         public ICollection<DoctorRating> DoctorRatings { get; set;}
     }
 }

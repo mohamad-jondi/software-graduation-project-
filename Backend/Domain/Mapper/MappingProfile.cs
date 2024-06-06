@@ -2,6 +2,7 @@
 using Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Allergy;
+using Domain.DTOs.Cases;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.Login;
 using Domain.DTOs.Patient;
@@ -24,8 +25,8 @@ namespace Domain.Mapper
             CreateMap<Patient, PersonDTO>().ReverseMap();
             CreateMap<Doctor, PersonDTO>().ReverseMap();
             CreateMap<Patient, PatientFullDTO>().ReverseMap();
-            
-          //  CreateMap<Nurse, PersonDTO>().ReverseMap();
+            CreateMap<Case, CaseDTO>().ReverseMap();
+            //  CreateMap<Nurse, PersonDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForOutputDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForInputDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentDTO>().ReverseMap();

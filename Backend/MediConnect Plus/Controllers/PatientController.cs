@@ -1,6 +1,7 @@
 ﻿using Domain.DTOs;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
 using Domain.DTOs.Patient;
 using Domain.DTOs.Vaccination;
 using Domain.IServices;
@@ -117,7 +118,32 @@ public class PatientController : ControllerBase
             return Ok(vaccinations);
         return BadRequest("No vaccinations found");
     }
+    [HttpGet("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> GetLifeStyleFactors(string patientUsername)
+    {
+        var LifestyleFactors = await _patientService.GetLifeStyleFactors(patientUsername);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
 
+    }
+    [HttpPost("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> AddLifeStyleFactors(string patientUsername,LifestyleFactorsDTO lifeFactors)
+    {
+        var LifestyleFactors = await _patientService.AddLifeStyleFactors(patientUsername, lifeFactors);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
+
+    }
+    [HttpPut("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> UpdateLifeStyleFactors(string patientUsername, LifestyleFactorsForUpdatingDTO lifeFactors)
+    {
+        var LifestyleFactors = await _patientService.UpdateLifeStyleFactors(patientUsername, lifeFactors);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
+    }
     [HttpPost("AddVaccination")]
     public async Task<ActionResult<VaccinationForOutputDTO>> AddVaccination(string patientUsername, VaccinationDTO vaccination)
     {
