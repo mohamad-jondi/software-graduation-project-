@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/DoctorHomePage.dart';
+import 'package:flutter_app/DoctorSignup.dart';
 import 'package:flutter_app/NewPassword.dart';
 
 class NewPassword extends StatefulWidget {
@@ -125,6 +127,6 @@ class _ResetPasswordPageState extends State<NewPassword> {
 
 void main() {
   runApp(MaterialApp(
-    home: NewPassword(),
+    home: DoctorHomePage(),
   ));
 }
