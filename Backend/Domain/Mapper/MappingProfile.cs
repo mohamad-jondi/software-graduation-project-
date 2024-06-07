@@ -3,6 +3,7 @@ using Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Cases;
+using Domain.DTOs.Chats;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.Login;
 using Domain.DTOs.Patient;
@@ -34,6 +35,9 @@ namespace Domain.Mapper
             CreateMap<Allergy, AllergyDTO>().ReverseMap();
             CreateMap<Vaccination, VaccinationForOutputDTO>().ReverseMap();
             CreateMap<Allergy, VaccinationDTO>().ReverseMap();
+            CreateMap<ChatMessage, ChatMessageDTO>().ReverseMap();
+            CreateMap<ChatMessage, CreateChatMessageDTO>().ReverseMap();
+            
 
 
         }

@@ -51,6 +51,19 @@ namespace Data.DbContexts
                 .HasForeignKey(e => e.EmergancyContactID);
             modelBuilder.Entity<Avaliability>()
                 .HasKey(e => e.AvalibailityID);
+            modelBuilder.Entity<Chat>()
+              .HasOne(c => c.FirstParty)
+              .WithMany()
+              .HasForeignKey(c => c.FirstPartyID)
+              .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.SecondParty)
+                .WithMany()
+                .HasForeignKey(c => c.SecondPartyID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MedicalSecondOpinion>().HasKey(c => c.SecondOpinionId);
 
         }
     }

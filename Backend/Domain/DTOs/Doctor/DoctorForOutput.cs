@@ -1,4 +1,6 @@
 ﻿using Domain.DTOs.Cases;
+using Domain.DTOs.Chats;
+
 namespace Domain.DTOs.Doctor
 {
     public class DoctorForOutputDTO

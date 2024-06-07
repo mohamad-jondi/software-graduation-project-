@@ -10,10 +10,11 @@ namespace Data.Models
         [Key]
         public long DocumentId { get; set; }
         [ForeignKey("UserID")]
-        public long UserID { get; set; }
+        public int UserID { get; set; }
         public User? User{ get; set; }
         public string FileName { get; set; }
         [Required]
-        public byte[]? FileData { get; set; }
+        [MaxLength(25 * 1024 * 1024)]
+        public byte[] FileData { get; set; }
     }
 }

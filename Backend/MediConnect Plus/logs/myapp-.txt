@@ -393,3 +393,76 @@ Data.Models.Patient -> Domain.DTOs.Patient.PatientFullDTO
     CONSTRAINT [FK_DoctorRatings_Users_DoctorID] FOREIGN KEY ([DoctorID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_DoctorRatings_Users_UserID] FOREIGN KEY ([UserID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
 );"
+2024-06-07 20:38:12.775 +03:00 [Error] Failed executing DbCommand ("41"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""DECLARE @var1 sysname;
+SELECT @var1 = [d].[name]
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Users]') AND [c].[name] = N'ProfilePicture');
+IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [Users] DROP CONSTRAINT [' + @var1 + '];');
+ALTER TABLE [Users] ALTER COLUMN [ProfilePicture] varbinary(max) NOT NULL;"
+2024-06-07 20:49:52.331 +03:00 [Error] Failed executing DbCommand ("17"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""DECLARE @var1 sysname;
+SELECT @var1 = [d].[name]
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Users]') AND [c].[name] = N'ProfilePicture');
+IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [Users] DROP CONSTRAINT [' + @var1 + '];');
+ALTER TABLE [Users] ALTER COLUMN [ProfilePicture] varbinary(max) NOT NULL;"
+2024-06-07 20:54:14.997 +03:00 [Error] Failed executing DbCommand ("23"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""CREATE TABLE [Cases] (
+    [CaseId] int NOT NULL IDENTITY,
+    [PatientID] int NOT NULL,
+    [DoctorId] int NOT NULL,
+    [NurseID] int NOT NULL,
+    [CaseDescription] nvarchar(max) NOT NULL,
+    [Title] nvarchar(max) NOT NULL,
+    [CreatedDate] datetime2 NOT NULL,
+    [Diagnosis] nvarchar(max) NOT NULL,
+    [TreatmentPlan] nvarchar(max) NOT NULL,
+    [Notes] nvarchar(max) NOT NULL,
+    [LastUpdated] datetime2 NOT NULL,
+    [NextAppointmentDate] datetime2 NULL,
+    CONSTRAINT [PK_Cases] PRIMARY KEY ([CaseId]),
+    CONSTRAINT [FK_Cases_Users_DoctorId] FOREIGN KEY ([DoctorId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_Cases_Users_NurseID] FOREIGN KEY ([NurseID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_Cases_Users_PatientID] FOREIGN KEY ([PatientID]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
+);"
+2024-06-07 20:54:54.167 +03:00 [Error] Failed executing DbCommand ("7"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""CREATE TABLE [Documents] (
+    [DocumentId] bigint NOT NULL IDENTITY,
+    [Type] nvarchar(max) NOT NULL,
+    [UserID] bigint NOT NULL,
+    [UserId] int NULL,
+    [FileName] nvarchar(max) NOT NULL,
+    [FileData] varbinary(max) NOT NULL,
+    [CaseId] int NULL,
+    CONSTRAINT [PK_Documents] PRIMARY KEY ([DocumentId]),
+    CONSTRAINT [FK_Documents_Cases_CaseId] FOREIGN KEY ([CaseId]) REFERENCES [Cases] ([CaseId]) ON DELETE NO ACTION,
+    CONSTRAINT [FK_Documents_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE NO ACTION
+);"
+2024-06-07 20:59:16.338 +03:00 [Error] Failed executing DbCommand ("7"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""CREATE TABLE [Documents] (
+    [DocumentId] bigint NOT NULL IDENTITY,
+    [Type] nvarchar(max) NOT NULL,
+    [UserID] bigint NOT NULL,
+    [FileName] nvarchar(max) NOT NULL,
+    [FileData] varbinary(max) NOT NULL,
+    [CaseId] int NULL,
+    CONSTRAINT [PK_Documents] PRIMARY KEY ([DocumentId]),
+    CONSTRAINT [FK_Documents_Cases_CaseId] FOREIGN KEY ([CaseId]) REFERENCES [Cases] ([CaseId]) ON DELETE NO ACTION,
+    CONSTRAINT [FK_Documents_Users_UserId] FOREIGN KEY ([UserID]) REFERENCES [Users] ([Id]) ON DELETE NO ACTION
+);"
+2024-06-07 21:00:48.304 +03:00 [Error] Failed executing DbCommand ("9"ms) [Parameters=[""], CommandType='Text', CommandTimeout='30']"
+""CREATE TABLE [MedicalSecondOpinions] (
+    [SecondOpinionId] int NOT NULL IDENTITY,
+    [CaseId] int NOT NULL,
+    [ReviewingDoctorId] int NOT NULL,
+    [ReviewDate] datetime2 NULL,
+    [Status] int NOT NULL,
+    [SecondOpinionDiagnosis] nvarchar(max) NOT NULL,
+    [Comments] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_MedicalSecondOpinions] PRIMARY KEY ([SecondOpinionId]),
+    CONSTRAINT [FK_MedicalSecondOpinions_Cases_CaseId] FOREIGN KEY ([CaseId]) REFERENCES [Cases] ([CaseId]) ON DELETE CASCADE,
+    CONSTRAINT [FK_MedicalSecondOpinions_Users_ReviewingDoctorId] FOREIGN KEY ([ReviewingDoctorId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE
+);"

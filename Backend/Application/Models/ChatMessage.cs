@@ -1,5 +1,4 @@
-﻿using Data.enums;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models
 {
@@ -11,7 +10,7 @@ namespace Data.Models
         
         public int ChatID { get; set; }
         public Chat? Chat { get; set; }
-        public PersonType Sender { get; set; }
+        public string SenderUsername { get; set; }
         public DateTime SentDateTime { get; set; }
 
         public bool IsDeleted { get; set; }

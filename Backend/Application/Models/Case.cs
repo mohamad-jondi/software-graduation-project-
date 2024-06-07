@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection.Metadata;
 
 namespace Data.Models
 {
@@ -25,8 +24,7 @@ namespace Data.Models
         public Patient Patient { get; set; }
         public Doctor Doctor { get; set; }
         public Nurse Nurse { get; set; }
-        public ICollection<Document> RelatedDocuments { get; set; }
-
+        public ICollection<Documents> RelatedDocuments { get; set; }
         public ICollection<Operation> RelatedOperations { get; set; } 
         public ICollection<MedicalSecondOpinion> SecondOpinionRequests { get; set; }
     }
