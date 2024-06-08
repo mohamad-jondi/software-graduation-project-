@@ -1,7 +1,10 @@
-// doctor_home_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_app/AppointmentPage.dart';
 import 'package:flutter_app/CalendarPage%20.dart';
 import 'package:flutter_app/ContactsPage.dart';
+import 'package:flutter_app/EditProfileDoctor.dart';
+import 'package:flutter_app/ManageAppointmentsPage.dart';
+import 'package:flutter_app/ConfirmedAppointmentsPage.dart';
 import 'package:flutter_app/NotificationPage.dart';
 import 'package:intl/intl.dart';
 
@@ -80,21 +83,55 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     } else if (_selectedIndex == 3) {
       content = CalendarPage();
     } else if (_selectedIndex == 2) {
-      // New case for ChatPage
       content = Contactspage();
     } else {
       content = HomeScreen(
         upcomingAppointments: upcomingAppointments,
         pendingAppointments: pendingAppointments,
+        onAppointmentTap: (appointment) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AppointmentPage(
+                patientName: appointment['patient']!,
+                appointmentDate: appointment['date']!,
+                appointmentStatus: appointment['status']!,
+              ),
+            ),
+          );
+        },
+        onShowAllUpcoming: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ConfirmedAppointmentsPage(
+                confirmedAppointments: upcomingAppointments,
+              ),
+            ),
+          );
+        },
+        onShowAllPending: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ManageAppointmentsPage(
+                pendingAppointments: pendingAppointments,
+              ),
+            ),
+          );
+        },
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome Dr. Ahmad'),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.person),
+            icon: Icon(
+              Icons.list,
+              size: 50,
+              color: Color(0xFF199A8E),
+            ),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -131,14 +168,26 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               leading: Icon(Icons.edit),
               title: Text('Edit Profile Info'),
               onTap: () {
-                // Navigate to edit profile info
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfileDoctor(),
+                  ),
+                );
               },
             ),
             ListTile(
               leading: Icon(Icons.event),
               title: Text('Manage Appointments'),
               onTap: () {
-                // Navigate to manage appointments
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ManageAppointmentsPage(
+                      pendingAppointments: pendingAppointments,
+                    ),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -183,10 +232,16 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
 class HomeScreen extends StatelessWidget {
   final List<Map<String, String>> upcomingAppointments;
   final List<Map<String, String>> pendingAppointments;
+  final Function(Map<String, String>) onAppointmentTap;
+  final VoidCallback onShowAllUpcoming;
+  final VoidCallback onShowAllPending;
 
   HomeScreen({
     required this.upcomingAppointments,
     required this.pendingAppointments,
+    required this.onAppointmentTap,
+    required this.onShowAllUpcoming,
+    required this.onShowAllPending,
   });
 
   String _getNextAppointmentTimeLeft() {
@@ -240,8 +295,25 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   ...upcomingAppointments.map((appointment) {
-                    return AppointmentCard(appointment: appointment);
+                    return GestureDetector(
+                      onTap: () => onAppointmentTap(appointment),
+                      child: AppointmentCard(appointment: appointment),
+                    );
                   }).toList(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: onShowAllUpcoming,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF199A8E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('Show All',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -266,8 +338,25 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   ...pendingAppointments.map((appointment) {
-                    return AppointmentCard(appointment: appointment);
+                    return GestureDetector(
+                      onTap: () => onAppointmentTap(appointment),
+                      child: AppointmentCard(appointment: appointment),
+                    );
                   }).toList(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: onShowAllPending,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF199A8E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text('Show All',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -302,7 +391,8 @@ class AppointmentCard extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                      'Date & Time: ${appointment['date'] ?? 'N/A'}, ${appointment['time'] ?? 'N/A'}'),
+                    'Date & Status: ${appointment['date'] ?? 'N/A'}, ${appointment['status'] ?? 'N/A'}',
+                  ),
                 ],
               ),
             ),
