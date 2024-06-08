@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/DoctorHomePage.dart';
 import 'package:flutter_app/DoctorSignup.dart';
 import 'package:flutter_app/NewPassword.dart';
+import 'package:flutter_app/PatientHomePage.dart';
 
 class NewPassword extends StatefulWidget {
   @override
