@@ -5,22 +5,22 @@ class Contactspage extends StatelessWidget {
   final List<Map<String, dynamic>> contacts = [
     {
       "name": "John Doe",
-      "image": "assets/john_doe.jpg",
+      "image": "images/doctorimage.png",
       "messages": 5,
     },
     {
       "name": "Jane Smith",
-      "image": "assets/jane_smith.jpg",
+      "image": "images/doctorimage.png",
       "messages": 2,
     },
     {
       "name": "Alice Brown",
-      "image": "assets/alice_brown.jpg",
+      "image": "images/doctorimage.png",
       "messages": 1,
     },
     {
       "name": "Bob Johnson",
-      "image": "assets/bob_johnson.jpg",
+      "image": "images/doctorimage.png",
       "messages": 3,
     },
   ];

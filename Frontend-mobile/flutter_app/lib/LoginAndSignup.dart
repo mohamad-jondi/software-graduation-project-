@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/SignInPage.dart';
+import 'package:flutter_app/SignupAs.dart';
 
 class LoginAndSignup extends StatelessWidget {
   @override
@@ -41,7 +43,10 @@ class LoginAndSignup extends StatelessWidget {
               const SizedBox(height: 35),
               ElevatedButton(
                 onPressed: () {
-                  // Add your onPressed code here!
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignInPage()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF199A8E), // Background color
@@ -65,7 +70,10 @@ class LoginAndSignup extends StatelessWidget {
               const SizedBox(height: 20), // Space between the two buttons
               OutlinedButton(
                 onPressed: () {
-                  // Add your onPressed code here!
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignupAs()),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF199A8E), // Text color
@@ -94,10 +102,4 @@ class LoginAndSignup extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: LoginAndSignup(),
-  ));
 }
