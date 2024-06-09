@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/PatientHomePage.dart';
+import 'package:flutter_app/ResetPassword.dart';
+import 'package:flutter_app/SignupAs.dart';
 
 class SignInPage extends StatefulWidget {
   @override
@@ -35,7 +38,12 @@ class _SignInPageState extends State<SignInPage> {
               _buildPasswordTextField(),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PatientHomePage()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF199A8E), // Background color
                   padding:
@@ -51,7 +59,10 @@ class _SignInPageState extends State<SignInPage> {
               SizedBox(height: 10),
               TextButton(
                 onPressed: () {
-                  // Forgot password logic
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ResetPassword()),
+                  );
                 },
                 style: ButtonStyle(
                   foregroundColor:
@@ -65,7 +76,10 @@ class _SignInPageState extends State<SignInPage> {
               SizedBox(height: 10),
               TextButton(
                 onPressed: () {
-                  // Navigate to sign up page logic
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignupAs()),
+                  );
                 },
                 style: ButtonStyle(
                   foregroundColor:

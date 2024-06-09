@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/NewPassword.dart';
 
 class VerificationPage extends StatefulWidget {
   @override
-  _EnterVerificationCodeState createState() => _EnterVerificationCodeState();
+  _VerificationPageState createState() => _VerificationPageState();
 }
 
-class _EnterVerificationCodeState extends State<VerificationPage> {
+class _VerificationPageState extends State<VerificationPage> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final FocusNode _focusNode = FocusNode();
@@ -79,7 +80,10 @@ class _EnterVerificationCodeState extends State<VerificationPage> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Verification logic
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => NewPassword()),
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(

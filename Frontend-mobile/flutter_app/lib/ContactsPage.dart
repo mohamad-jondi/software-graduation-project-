@@ -1,26 +1,26 @@
-// chat_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_app/ChatPage.dart';
 
 class Contactspage extends StatelessWidget {
   final List<Map<String, dynamic>> contacts = [
     {
       "name": "John Doe",
-      "image": "assets/john_doe.jpg",
+      "image": "images/doctorimage.png",
       "messages": 5,
     },
     {
       "name": "Jane Smith",
-      "image": "assets/jane_smith.jpg",
+      "image": "images/doctorimage.png",
       "messages": 2,
     },
     {
       "name": "Alice Brown",
-      "image": "assets/alice_brown.jpg",
+      "image": "images/doctorimage.png",
       "messages": 1,
     },
     {
       "name": "Bob Johnson",
-      "image": "assets/bob_johnson.jpg",
+      "image": "images/doctorimage.png",
       "messages": 3,
     },
   ];
@@ -29,39 +29,62 @@ class Contactspage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Your Contacts'),
+        title: Text(
+          'Your Contacts',
+          style: TextStyle(color: Color(0xFF199A8E)),
+        ),
+        iconTheme: IconThemeData(
+            color: Color(0xFF199A8E)), // Optional: Change AppBar icon color
       ),
-      body: ListView.builder(
-        itemCount: contacts.length,
-        itemBuilder: (context, index) {
-          final contact = contacts[index];
-          return Column(
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: AssetImage(contact['image']),
-                  radius: 25,
-                ),
-                title: Text(contact['name']),
-                trailing: Container(
-                  padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.0),
+        child: ListView.builder(
+          itemCount: contacts.length,
+          itemBuilder: (context, index) {
+            final contact = contacts[index];
+            return Column(
+              children: [
+                Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFF199A8E),
+                    border: Border.all(color: Color(0xFF199A8E)),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    '${contact['messages']}',
-                    style: TextStyle(color: Colors.white),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: AssetImage(contact['image']),
+                      radius: 25,
+                    ),
+                    title: Text(contact['name']),
+                    trailing: Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF199A8E),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${contact['messages']}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(
+                            contactName: contact['name'],
+                            contactImage: contact['image'],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                onTap: () {
-                  // Navigate to chat detail page (to be implemented)
-                },
-              ),
-              SizedBox(height: 10), // Add space between contacts
-            ],
-          );
-        },
+                SizedBox(height: 10), // Add space between contacts
+              ],
+            );
+          },
+        ),
       ),
     );
   }

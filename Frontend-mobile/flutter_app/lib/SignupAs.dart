@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/DoctorHomePage.dart';
+import 'package:flutter_app/DoctorSignup.dart';
+import 'package:flutter_app/PatientHomePage.dart';
 
 class SignupAs extends StatelessWidget {
   @override
@@ -47,7 +50,11 @@ class SignupAs extends StatelessWidget {
                     icon: Icons.medical_services,
                     text: 'Sign up as a Doctor',
                     onPressed: () {
-                      // Doctor sign up logic
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DoctorHomePage()),
+                      );
                     },
                   ),
                   SizedBox(height: 20),
@@ -55,7 +62,11 @@ class SignupAs extends StatelessWidget {
                     icon: Icons.person,
                     text: 'Sign up as a Patient',
                     onPressed: () {
-                      // Patient sign up logic
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PatientHomePage()),
+                      );
                     },
                   ),
                   SizedBox(height: 20),
@@ -63,7 +74,10 @@ class SignupAs extends StatelessWidget {
                     icon: Icons.local_hospital,
                     text: 'Sign up as a Nurse',
                     onPressed: () {
-                      // Nurse sign up logic
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => DoctorSignup()),
+                      );
                     },
                   ),
                 ],

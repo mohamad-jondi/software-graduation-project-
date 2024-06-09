@@ -16,8 +16,8 @@ class _ResetPasswordPageState extends State<NewPassword> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Create New Password'),
-        backgroundColor: Colors.white,
         elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -52,43 +52,46 @@ class _ResetPasswordPageState extends State<NewPassword> {
                 labelText: 'Confirm Password',
               ),
               SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Password validation logic
-                    if (_passwordController.text ==
-                        _confirmPasswordController.text) {
-                      // Passwords match, proceed
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Passwords match'),
-                        ),
-                      );
-                      // Clear text fields
-                      _passwordController.clear();
-                      _confirmPasswordController.clear();
-                    } else {
-                      // Passwords don't match
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Passwords do not match'),
-                        ),
-                      );
+              Container(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      // Password validation logic
+                      if (_passwordController.text ==
+                          _confirmPasswordController.text) {
+                        // Passwords match, proceed
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Passwords match'),
+                          ),
+                        );
+                        // Clear text fields
+                        _passwordController.clear();
+                        _confirmPasswordController.clear();
+                      } else {
+                        // Passwords don't match
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Passwords do not match'),
+                          ),
+                        );
+                      }
                     }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF199A8E),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF199A8E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 15.0),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 15.0),
-                ),
-                child: Text(
-                  'Create Password',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                  child: Text(
+                    'Create Password',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
