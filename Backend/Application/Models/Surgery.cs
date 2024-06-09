@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models
 {
-    public class Operation :BaseEntity
+    public class Surgery :BaseEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int OperationID { get; set; }
@@ -12,6 +13,8 @@ namespace Data.Models
         public Patient? Patient { get; set; } 
         public string OperationName { get; set; }
         public DateTime SurgeryDate { get; set; }
+        public SurgeryStatus SurgeryStatus { get; set; }
+        public string SurgeryNotes { get; set; }
         [ForeignKey("DoctorID")]
         public int SurgeonID { get; set; }
         public Doctor? Surgeon { get; set; }

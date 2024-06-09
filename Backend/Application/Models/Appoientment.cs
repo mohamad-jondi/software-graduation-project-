@@ -15,6 +15,8 @@ namespace Data.Models
 
         public string Description { get; set; }
 
+        public string DoctorNotes { get; set; }
+
         [ForeignKey("doctorID")]
         public int DoctorId { get; set; }
         public Doctor Doctor { get; set; }

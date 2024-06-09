@@ -1,0 +1,3679 @@
+// File: C:\Users\moham\Desktop\software\Backend\Application\UnitOfWork.cs
+﻿using Data.DbContexts;
+using Data.Interfaces;
+using Data.Models;
+using Data.Repositories;
+
+namespace Data
+{
+    public class UnitOfWork : IUnitOfWork
+    {
+        private ApplicationDbContext _context;
+        private Dictionary<string, object> _repositories;
+
+        public UnitOfWork(ApplicationDbContext context)
+        {
+            _context = context;
+            _repositories = new Dictionary<string, object>();
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
+        }
+
+        public IBaseRepositories<T> GetRepositories<T>() where T : BaseEntity
+        {
+           if (_repositories.ContainsKey(typeof(T).Name))
+           {
+                return (IBaseRepositories<T>)_repositories[typeof(T).Name];
+           }
+           var nRepo = new BaseRepositorie<T>(_context);
+            _repositories[typeof(T).Name] = nRepo;
+            return nRepo;
+
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\DbContexts\ApplicationDbContext.cs
+﻿using Data.Models;
+using Data.Models.Data.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace Data.DbContexts
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        {
+
+        }
+        public virtual DbSet<Allergy> Allergies { get; set; }
+        public virtual DbSet<Avaliability> Avaliabilities { get; set; }
+        public virtual DbSet<Chat> Chats{ get; set; }
+        public virtual DbSet<Documents> Documents { get; set; }
+        public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+        public virtual DbSet<Credential> Credentials { get; set; }
+        public virtual DbSet<Doctor> Doctors{ get; set; }
+        public virtual DbSet<EmergencyContactInfo> EmergencyContactInfos { get; set; }
+        public virtual DbSet<LifestyleFactors> LifestyleFactors { get; set; }
+        public virtual DbSet<Surgery> Operations { get; set; }
+        public virtual DbSet<Patient> Patients { get; set; }
+        public virtual DbSet<Person> Persons { get; set; }
+        public virtual DbSet<User> Users{ get; set; }
+        public virtual DbSet<Vaccination> Vaccinations { get; set; }
+        public virtual DbSet<Appointment> Appointments { get; set; }
+        public virtual DbSet<DoctorRating> DoctorRatings { get; set; }
+
+         public virtual DbSet<MedicalSecondOpinion> MedicalSecondOpinions{ get; set; }
+
+        public virtual DbSet<Nurse> Nurses { get; set; }
+
+        public virtual DbSet<Case> Cases{ get; set; }
+
+        public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Patient>()
+                .HasOne(p => p.EmergancyContact)
+                .WithOne(e => e.Patient)
+                .HasForeignKey<EmergencyContactInfo>(e => e.PatientId);
+
+            modelBuilder.Entity<EmergencyContactInfo>()
+                .HasOne(e => e.Person)
+                .WithMany()
+                .HasForeignKey(e => e.EmergancyContactID);
+            modelBuilder.Entity<Avaliability>()
+                .HasKey(e => e.AvalibailityID);
+            modelBuilder.Entity<Chat>()
+              .HasOne(c => c.FirstParty)
+              .WithMany()
+              .HasForeignKey(c => c.FirstPartyID)
+              .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.SecondParty)
+                .WithMany()
+                .HasForeignKey(c => c.SecondPartyID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MedicalSecondOpinion>().HasKey(c => c.SecondOpinionId);
+
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\AppointmentStatus.cs
+﻿namespace Data.enums
+{
+    public enum AppointmentStatus
+    {
+        Pending,
+        Accepted,
+        Missed,
+        Ended,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\DATEOFTHEWEEK.cs
+﻿namespace Data.enums
+{
+    public enum DATEOFTHEWEEK
+    {
+        SUN,MON,TUE,WED,THU,FRI,SAT
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\DoctorWorkType.cs
+﻿namespace Data.enums
+{
+    public enum DoctorWorkType
+    {
+        SecondHandOpinoin,
+        Clinic,
+        Both,
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\Gender.cs
+﻿namespace Data.enums
+{
+    public enum Gender
+    {
+        Male,
+        Female,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\MedicalSecondOpinionStatus.cs
+﻿namespace Data.enums
+{
+    public enum MedicalSecondOpinionStatus
+    {
+        Pending,
+        Reviewed,
+        Closed,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\PersonType.cs
+﻿namespace Data.enums
+{
+    public enum PersonType
+    {
+        Doctor, 
+        Patient, 
+        Nurse,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\SurgeryStatus.cs
+﻿namespace Data.enums
+{
+    public enum SurgeryStatus
+    {
+        Pending,
+        Scheduled,
+        Done,
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\TestStatus.cs
+﻿namespace Data.enums
+{
+    public enum TestStatus
+    {
+        Pending,
+        Done,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\UserType.cs
+﻿namespace Data.enums
+{
+    public enum UserType
+    {
+        Person,
+        Hosbital,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\enums\VaccineStatus.cs
+﻿namespace Data.enums
+{
+    public enum VaccineStatus
+    {
+        Taken, 
+        InProgress,
+        NotTaken,
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Interfaces\IBaseRepositories.cs
+﻿using Data.Models;
+
+
+namespace Data.Interfaces
+{
+    public interface IBaseRepositories<T> where T : BaseEntity
+    {
+        IQueryable<T> Get();
+        IQueryable<T> GetPaginated(int pageNumber, int pageSize);
+        Task<T> Add(T entity);
+        Task<IEnumerable<T>> AddRange(IEnumerable<T> entities);
+        Task Delete(T entity);
+        Task DeleteRange(IEnumerable<T> entites);
+        Task<T> Update(T entity);
+        Task<IEnumerable<T>> UpdateRange(IEnumerable<T> entity);
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Interfaces\IUnitOfWork.cs
+﻿using Data.Models;
+
+namespace Data.Interfaces
+{
+    public interface IUnitOfWork : IDisposable
+    {
+        IBaseRepositories<T> GetRepositories<T>() where T : BaseEntity;
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Address.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Address
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int AddressID { get; set; } 
+        public string StreetAddress { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string PostalCode { get; set; }
+        public string Country { get; set; }
+
+        [ForeignKey("UserID")]
+        public int UserId { get; set; }
+
+        public User? user { get; set; }
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Allergy.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Allergy :BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int AllergyID { get; set; }
+
+        [ForeignKey("PatientID")]
+        public int PatientID { get; set; }
+        public Patient? Patient { get; set; } 
+        public string Allergey { get; set; }
+        public string ReactionDescription { get; set; }
+        public string Severity { get; set; }
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Appoientment.cs
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+
+    public class Appointment : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int AppointmentId { get; set; }
+
+        public DateTime Date { get; set; }
+
+        public AppointmentStatus Status { get; set; }
+
+        public string Description { get; set; }
+
+        public string DoctorNotes { get; set; }
+
+        [ForeignKey("doctorID")]
+        public int DoctorId { get; set; }
+        public Doctor Doctor { get; set; }
+
+        [ForeignKey("PatientID")]
+        public int PatientId { get; set; }
+        public Patient Patient { get; set; }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Avaliability.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Avaliability : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int AvalibailityID { get; set; }
+        public DayOfWeek DayOfWeek { get; set; } 
+        public TimeSpan StartHour { get; set; }
+        public TimeSpan EndHour { get; set; }
+
+        [ForeignKey("DoctorID")]
+        public int DoctorID { get; set; }
+        public Doctor? Doctor { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\BaseEntity.cs
+﻿namespace Data.Models
+{
+    public class BaseEntity
+    {
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Callender.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Callender : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int CallenderID { get; set; } 
+        public DateTime Date { get; set; }
+        public string Type { get; set; } 
+        public string Description { get; set; }
+
+        [ForeignKey("PersonID")]
+        public int PersonID { get; set; }
+        public Person? Patient { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Case.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Case
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int CaseId { get; set; }
+
+        [ForeignKey("PatientID")]
+        public int PatientID { get; set; }
+        [ForeignKey("DoctorID")]
+        public int DoctorId { get; set; }
+        [ForeignKey("NurseID")]
+        public int NurseID { get; set; }
+        public string CaseDescription { get; set; }
+        public string Title { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string Diagnosis { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public DateTime? NextAppointmentDate { get; set; }
+        public Patient Patient { get; set; }
+        public Doctor Doctor { get; set; }
+        public Nurse Nurse { get; set; }
+
+        public ICollection<Test> Tests { get; set; }  
+        public ICollection<Documents> RelatedDocuments { get; set; }
+        public ICollection<Surgery> RelatedOperations { get; set; } 
+        public ICollection<MedicalSecondOpinion> SecondOpinionRequests { get; set; }
+        public ICollection<Appointment> Appointments { get; set; }
+        public TreatmentPlan TreatmentPlan { get; set; } 
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Chat.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Chat : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ChatID { get; set; }
+        [ForeignKey("FirstPartyID")]
+        public int FirstPartyID { get; set; }
+        public User FirstParty { get; set; }
+        [ForeignKey("SecondPartyID")]
+        public int SecondPartyID { get; set; }
+        public User? SecondParty { get; set; } 
+        public ICollection<ChatMessage> Messages { get; set; } 
+    }
+
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\ChatMessage.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class ChatMessage : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ChatMessageID { get; set; }
+        [ForeignKey("ChatID")] 
+        
+        public int ChatID { get; set; }
+        public Chat? Chat { get; set; }
+        public string SenderUsername { get; set; }
+        public DateTime SentDateTime { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public bool IsRead { get; set; }
+        public string MessageContent { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Credential.cs
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Credential :BaseEntity 
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int CredentialID { get; set; }
+        [Required]
+        public string CredentialType { get; set; }
+
+        [Required]
+        public string CredentialValue { get; set; }
+
+        [ForeignKey("DoctorID")]
+        public int DoctorID { get; set; }
+        public Doctor Doctor { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Doctor.cs
+﻿using Data.enums;
+
+namespace Data.Models
+{
+    public class Doctor : Person 
+    {
+        public string Specialization { get; set; }
+        public DoctorWorkType DoctorWorkType { get; set; }
+        public ICollection<Credential> credential { get; set; }
+        public ICollection<Callender> Callender { get; set; }
+        public ICollection<Avaliability> Avalible {get; set; }
+        public ICollection<Case> Cases { get; set; } 
+        public ICollection<DoctorRating> DoctorRatings { get; set;}
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\DoctorRating.cs
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class DoctorRating : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int DoctorRatingID { get; set; }
+        [Range(0,5)]
+        public double Rating { get; set; }
+        public string? comment { get; set; }
+
+        [ForeignKey("DoctorID")]
+        public int DoctorID { get; set; }
+        public Doctor? Doctor { get; set; }
+
+        [ForeignKey("UserID")]
+        public int UserID { get; set; } 
+        public User? User{ get; set; }
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Documents.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace Data.Models
+{
+    public class Documents
+    {
+        public string Type { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        public long DocumentId { get; set; }
+        [ForeignKey("UserID")]
+        public int UserID { get; set; }
+        public User? User{ get; set; }
+        public string FileName { get; set; }
+        [Required]
+        [MaxLength(25 * 1024 * 1024)]
+        public byte[] FileData { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Drug.cs
+﻿namespace Data.Models
+{
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    namespace Data.Models
+    {
+        public class Drug : BaseEntity
+        {
+            [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+            [Key]
+            public int DrugID { get; set; }
+
+            [Required]
+            public string Name { get; set; }
+
+            public string GenericName { get; set; }
+
+            public string BrandName { get; set; }
+
+            public string DosageForm { get; set; }
+
+            public string Strength { get; set; }
+
+            public string RouteOfAdministration { get; set; }
+
+            public string Frequency { get; set; }
+
+            public string Duration { get; set; }
+
+            public DateTime? StartDate { get; set; }
+
+            public DateTime? EndDate { get; set; }
+
+            [ForeignKey("DoctorID")]
+            public int PrescribedByID { get; set; }
+
+            public Doctor PrescribedBy { get; set; }
+
+            [ForeignKey("PatientID")]
+            public int PatientID { get; set; }
+
+            public Patient Patient { get; set; }
+
+            public string SideEffects { get; set; }
+
+            public string Contraindications { get; set; }
+
+            public string Interactions { get; set; }
+
+            public string StorageInstructions { get; set; }
+
+            public int Quantity { get; set; }
+
+            public string RefillInfo { get; set; }
+
+            public string Manufacturer { get; set; }
+
+            public string BatchNumber { get; set; }
+
+            public DateTime ExpiryDate { get; set; }
+        }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\EmergencyContactInfo.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    namespace Data.Models
+    {
+        public class EmergencyContactInfo : BaseEntity
+        {
+            [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+            public int EmergencyContactInfoID { get; set; } 
+            public string Relationship { get; set; }
+
+            [ForeignKey("PatientID")]
+            public int PatientId { get; set; }
+            public Patient Patient { get; set; }
+
+            [ForeignKey("PersonID")]
+            public int EmergancyContactID { get; set; }
+            public Person Person { get; set; }
+        }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\JWTTokens.cs
+﻿namespace Data.Models
+{
+    public class JWTTokens
+    {
+        public string Token { get; set; }
+        public string refToken { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\JWTTokensRefresh.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class JWTTokensRefresh: BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int JWTTokensRefreshID { get; set; }
+        public Guid RefreshToken { get; set; }
+        [ForeignKey("UserID")]
+        public int UserID { get; set; }
+        public User? user { get; set; } 
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\LifestyleFactors.cs
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class LifestyleFactors : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int LifestyleFactorsId { get; set; } 
+        public bool IsSmoker { get; set; }
+        public bool IsAlcoholConsumer { get; set; }
+        public string ExerciseHabits { get; set; }
+        public string DietaryPreferences { get; set; }
+        public int PatientId { get; set; }
+        public Patient? Patient { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\MedicalSecondOpinions.cs
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Data.Models
+{
+    public class MedicalSecondOpinion
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int SecondOpinionId { get; set; }
+        [ForeignKey("CaseID")]
+        public int CaseId { get; set; }
+        [ForeignKey("DoctorID")]
+        public int ReviewingDoctorId { get; set; }
+        public DateTime? ReviewDate { get; set; }
+        public MedicalSecondOpinionStatus Status { get; set; } 
+        public string SecondOpinionDiagnosis { get; set; }
+        public string Comments { get; set; }
+        public Case Case { get; set; }
+        public Doctor ReviewingDoctor { get; set; }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Nurse.cs
+﻿namespace Data.Models
+{
+    public class Nurse : Person
+    {
+        ICollection<Credential> Credentials { get; set; }
+
+        ICollection<Case> cases { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Patient.cs
+﻿using Data.enums;
+using Data.Models.Data.Models;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Patient : Person
+    {
+        public string Occupation { get; set; }
+
+        [ForeignKey("EmergencyContactInfoID")]
+        public int EmergancyContactID { get; set; }
+        public EmergencyContactInfo? EmergancyContact { get; set; }
+        public LifestyleFactors LifestyleFactors { get; set; }
+        public ICollection<Allergy> Allergies { get; set; }
+        public ICollection<Vaccination> Vaccinations { get; set; }
+        public ICollection<Case> cases{ get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Person.cs
+﻿using Data.enums;
+using Data.Models.Data.Models;
+
+namespace Data.Models
+{
+    public class Person : User
+    {
+        public DateTime DateOfBirth { get; set; }
+        public double? LatestRecordedWeight { get; set; }
+        public double? LatestRecordedHeight { get; set; }
+        public Gender Gender { get; set; }
+        public string MaritalStatus { get; set; }
+        public string Occupation { get; set; }
+        public PersonType PersonType { get; set; }
+        public ICollection<Callender> CallenderAppointments { get; set; }
+
+        public ICollection<EmergencyContactInfo> EmergencyContactInfo { get; set; }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Surgery.cs
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Surgery :BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int OperationID { get; set; }
+        
+        [ForeignKey("PatientID")]
+        public int PatientID { get; set; } 
+        public Patient? Patient { get; set; } 
+        public string OperationName { get; set; }
+        public DateTime SurgeryDate { get; set; }
+        public SurgeryStatus SurgeryStatus { get; set; }
+        public string SurgeryNotes { get; set; }
+        [ForeignKey("DoctorID")]
+        public int SurgeonID { get; set; }
+        public Doctor? Surgeon { get; set; }
+        public string Description { get; set; }
+        
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Test.cs
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Test : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        public int TestID { get; set; }
+
+        [ForeignKey("PatientID")]
+        public int PatientID { get; set; }
+        public Patient Patient { get; set; }
+
+        [Required]
+        public string TestName { get; set; }
+
+        public string Description { get; set; }
+        public TestStatus Status { get; set; }
+        public string Results { get; set; }
+        public DateTime DateRequested { get; set; }
+        public DateTime? DateCompleted { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\TreatmentPlan.cs
+﻿using Data.Models;
+using Data.Models.Data.Models;
+using System.ComponentModel.DataAnnotations.Schema;
+
+public class TreatmentPlan : BaseEntity
+{
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int TreatmentPlanID { get; set; }
+
+    [ForeignKey("CaseID")]
+    public int CaseID { get; set; }
+    public Case Case { get; set; }
+    public string DrugUsage { get; set; }
+    public ICollection<Drug> Drugs { get; set; }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\User.cs
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class User :BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string Name { get; set; }
+        public string UserType { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public bool IsEmailConfirmed { get; set; }
+        public string RandomStringEmailConfirmations { get; set; }
+        public ICollection<Address> Addresses { get; set; }
+        public ICollection<Documents> RelatedDocumtents { get; set; }
+
+        public ICollection<Chat> Chats{ get; set; }
+        [MaxLength(25 * 1024 * 1024)]
+        public byte[] ProfilePicture { get; set; }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Vaccination.cs
+﻿using Data.enums;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Vaccination : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int VaccinationID { get; set; }
+        [ForeignKey("PatientID")]         
+        public int PatientID { get; set; } 
+        public Patient? Patient { get; set; }
+        public string Name { get; set; }
+        public DateTime AdministeredDate { get; set; }
+        public string Description { get; set; }
+        public VaccineStatus VaccineStatus { get; set; }
+        public int ShotsLeft { get; set;}
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Application\Repositories\BaseRepositorie.cs
+﻿using Data.Interfaces;
+using Data.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace Data.Repositories
+{
+    public class BaseRepositorie<T> : IBaseRepositories<T> where T : BaseEntity
+    {
+        private readonly DbContext _DbContext;
+        private DbSet<T> _dbset;
+
+        public BaseRepositorie(DbContext context)
+        {
+            _DbContext = context;
+            _dbset = context.Set<T>();
+        }
+        public async Task<T> Add(T entity)
+        {
+            await _dbset.AddAsync(entity);
+            await _DbContext.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<IEnumerable<T>> AddRange(IEnumerable<T> entities)
+        {
+            await _dbset.AddRangeAsync(entities);
+            await _DbContext.SaveChangesAsync();
+            return entities;
+        }
+
+        public async Task Delete(T entity)
+        {
+            _dbset.Remove(entity);
+            await _DbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteRange(IEnumerable<T> entites)
+        {
+             _dbset.RemoveRange(entites);
+            await _DbContext.SaveChangesAsync();
+        }
+
+        public  IQueryable<T> Get()
+        {
+            return _dbset.AsQueryable();
+        }
+
+        public IQueryable<T> GetPaginated(int pageNumber, int pageSize)
+        {
+            return _dbset.Skip(pageSize * (pageNumber-1)).Take(pageSize).AsQueryable();
+        }
+
+        public async Task<T> Update(T entity)
+        {
+            _dbset.Update(entity);
+            await _DbContext.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<IEnumerable<T>> UpdateRange(IEnumerable<T> entity)
+        {
+            _dbset.UpdateRange(entity);
+            await _DbContext.SaveChangesAsync();
+            return entity;
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\AddressDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class AddressDTO
+    {
+        public string StreetAddress { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string PostalCode { get; set; }
+        public string Country { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\AppointmentDTO.cs
+﻿using Data.enums;
+
+namespace Domain.DTOs
+{
+    public class AppointmentDTO
+    { 
+        public DateTime Date { get; set; }
+        public string DoctorName { get; set; }
+        public string PatientName { get; set; }
+        public string Status { get; set; }
+        public string Description { get; set; }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\AppointmentReminderDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class AppointmentReminderDTO
+    {
+    
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\AvaliabilityDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class AvaliabilityDTO
+    {
+        public DayOfWeek DayOfWeek { get; set; }
+        public TimeSpan StartHour { get; set; }
+        public TimeSpan EndHour { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\CallenderDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class CallenderDTO
+    {
+       
+        public DateTime Date { get; set; }
+        public string Type { get; set; }
+        public string Description { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\CredentialDTO.cs
+﻿
+namespace Domain.DTOs
+{
+    public class CredentialDTO
+    {
+        public string CredentialType { get; set; }
+        public string CredentialValue { get; set; }
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\DocumentDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class DocumentDTO
+    {
+        public string Type { get; set; }
+        public long DocumentId { get; set; }
+        public string FileName { get; set; }
+        public byte[]? FileData { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\DrugDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class DrugDTO
+    {
+        public int DrugID { get; set; }
+        public string Name { get; set; }
+        public string GenericName { get; set; }
+        public string BrandName { get; set; }
+        public string DosageForm { get; set; }
+        public string Strength { get; set; }
+        public string RouteOfAdministration { get; set; }
+        public string Frequency { get; set; }
+        public string Duration { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public int PrescribedByID { get; set; }
+        public int PatientID { get; set; }
+        public string SideEffects { get; set; }
+        public string Contraindications { get; set; }
+        public string Interactions { get; set; }
+        public string StorageInstructions { get; set; }
+        public int Quantity { get; set; }
+        public string RefillInfo { get; set; }
+        public string Manufacturer { get; set; }
+        public string BatchNumber { get; set; }
+        public DateTime ExpiryDate { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\JWTTokensDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class JWTTokensDTO
+    {
+        public string Token { get; set; }
+        public string refToken { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\MedicalSecondOpinionDTO.cs
+﻿using Data.enums;
+using System;
+
+namespace Domain.DTOs
+{
+    public class MedicalSecondOpinionDTO
+    {
+        public int SecondOpinionId { get; set; }
+        public int CaseId { get; set; }
+        public int ReviewingDoctorId { get; set; }
+        public DateTime? ReviewDate { get; set; }
+        public MedicalSecondOpinionStatus Status { get; set; }
+        public string SecondOpinionDiagnosis { get; set; }
+        public string Comments { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\OperationDTO.cs
+﻿using Domain.DTOs.Doctor;
+namespace Domain.DTOs
+{
+    public class OperationDTO
+    {
+        public string OperationName { get; set; }
+        public DateTime SurgeryDate { get; set; }
+        public string DoctorName { get; set; }
+        public string Description { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\SurgeryDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class SurgeryDTO
+    {
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\TestDTO.cs
+﻿using Data.enums;
+using System;
+
+namespace Domain.DTOs
+{
+    public class TestDTO
+    {
+        public int TestID { get; set; }
+        public string TestName { get; set; }
+        public string TestDescription { get; set; }
+        public int DoctorID { get; set; }
+        public int PatientID { get; set; }
+        public TestStatus Status { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\TreatmentPlanDTO.cs
+﻿using System.Collections.Generic;
+
+namespace Domain.DTOs
+{
+    public class TreatmentPlanDTO
+    {
+        public int TreatmentPlanID { get; set; }
+        public int CaseID { get; set; }
+        public string DrugUsage { get; set; }
+        public ICollection<DrugDTO> Drugs { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\UserDTO.cs
+﻿namespace Domain.DTOs
+{
+    public class UserDTO
+    {
+        public string Username { get; set; }
+        public string Name { get; set; }
+        public string UserType { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Allergy\AllergyDTO.cs
+﻿namespace Domain.DTOs.Allergy
+{
+    public class AllergyDTO
+    {
+        public string? Allergey { get; set; }
+        public string? ReactionDescription { get; set; }
+        public string? Severity { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Allergy\AllergyForOutputDTO.cs
+﻿namespace Domain.DTOs.Allergy
+{
+    public class AllergyForOutputDTO
+    {
+        public int AllergyID { get; set; }
+        public string Allergey { get; set; }
+        public string ReactionDescription { get; set; }
+        public string Severity { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Cases\CaseDTO.cs
+﻿namespace Domain.DTOs.Cases
+{
+    public class CaseDTO
+    {
+        public int CaseId { get; set; }
+        public int PatientID { get; set; }
+        public int DoctorId { get; set; }
+        public int NurseID { get; set; }
+        public string CaseDescription { get; set; }
+        public string Title { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string Diagnosis { get; set; }
+        public string Notes { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public DateTime? NextAppointmentDate { get; set; }
+        public ICollection<DocumentDTO> RelatedDocuments { get; set; }
+        public ICollection<SurgeryDTO> RelatedSurgeries { get; set; }
+        public ICollection<MedicalSecondOpinionDTO> SecondOpinionRequests { get; set; }
+        public ICollection<AppointmentDTO> Appointments { get; set; }
+        public TreatmentPlanDTO TreatmentPlan { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Chats\ChatForShowingFromTheOutsideDTO.cs
+﻿namespace Domain.DTOs.Chats
+{
+    public class ChatForShowingFromTheOutsideDTO
+    {
+        public int ChatId { get; set; }
+        public string FirstPartyUserName { get; set; }
+        public string SecondPartyUsername { get; set; }
+        public bool IsTheLastSenderMe { get; set; }
+        public string lastSentMassagess { get; set; }
+        public int numberOfMessages { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Chats\ChatMessageDTO.cs
+﻿namespace Domain.DTOs.Chats
+{
+    public class ChatMessageDTO
+    {
+        public int ChatMessageID { get; set; }
+        public string SenderUsername { get; set; }
+        public DateTime SentDateTime { get; set; }
+        public string MessageContent { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsRead { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Chats\CreateChatMessageDTO.cs
+﻿namespace Domain.DTOs.Chats
+{
+    public class CreateChatMessageDTO
+    {
+        public DateTime SentDateTime { get; set; }
+        public string MessageContent { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsRead { get; set; }
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Doctor\DoctorForInputDTO.cs
+﻿using Data.enums;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Chats;
+
+namespace Domain.DTOs.Doctor
+{
+    public class DoctorForInputDTO
+    {
+        public string Username { get; set; }
+        public string Specialization { get; set; }
+        public DoctorWorkType DoctorWorkType { get; set; }
+        public ICollection<CredentialDTO> credential { get; set; }
+        public ICollection<ChatMessageDTO> Chats { get; set; }
+        public ICollection<CallenderDTO> Callender { get; set; }
+        public ICollection<AvaliabilityDTO> Avalible { get; set; }
+        public ICollection<CaseDTO> Cases { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Doctor\DoctorForOutput.cs
+﻿using Domain.DTOs.Cases;
+using Domain.DTOs.Chats;
+
+namespace Domain.DTOs.Doctor
+{
+    public class DoctorForOutputDTO
+    {
+
+        public string Specialization { get; set; }
+        public string DoctorWorkType { get; set; }
+        public ICollection<CredentialDTO> credential { get; set; }
+        public ICollection<ChatMessageDTO> Chats { get; set; }
+        public ICollection<CallenderDTO> Callender { get; set; }
+        public ICollection<AvaliabilityDTO> Avalible { get; set; }
+        public ICollection<CaseDTO> Cases{ get; set; }
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\LifestyleFactors\LifestyleFactorsDTO.cs
+﻿namespace Domain.DTOs.LifestyleFactors
+{
+    public class LifestyleFactorsDTO
+    {
+        public bool IsSmoker { get; set; }
+        public bool IsAlcoholConsumer { get; set; }
+        public string ExerciseHabits { get; set; }
+        public string DietaryPreferences { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\LifestyleFactors\LifestyleFactorsForUpdatingDTO.cs
+﻿namespace Domain.DTOs.LifestyleFactors
+{
+    public class LifestyleFactorsForUpdatingDTO
+    {
+        public bool? IsSmoker { get; set; }
+        public bool? IsAlcoholConsumer { get; set; }
+        public string? ExerciseHabits { get; set; }
+        public string? DietaryPreferences { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Login\AuthinticateEmailDTO.cs
+﻿namespace Domain.DTOs.Login
+{
+    public class AuthinticateEmailDTO
+    {
+        public string Username { get; set; }
+        public string AuthinticationNumber { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Login\LoginDTO.cs
+﻿namespace Domain.DTOs.Login
+{
+    public class LoginDTO
+    {
+        public string Password { get; set; }
+        public string Username { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Login\RecoverPasswordRequestDTO.cs
+﻿namespace Domain.DTOs.Login
+{
+    public class RecoverPasswordRequestDTO
+    {
+        public string? Email { get; set; }
+        public string? Username { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Login\RegisterModelDTO.cs
+﻿using Data.enums;
+
+namespace Domain.DTOs.Login
+{
+    public class RegisterModelDTO
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Name { get; set; }
+        public UserType UserType { get; set; }
+
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Login\ResetPasswordDTO.cs
+﻿namespace Domain.DTOs.Login
+{
+    public class ResetPasswordDTO
+    {
+        public string Username { get; set; }
+        public string RandomNumber { get; set; }
+        public string Password { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Patient\EmergencyContactInfoDTO.cs
+﻿namespace Domain.DTOs.Patient
+{
+    public class EmergencyContactInfoDTO
+    {
+        public string Username { get; set; }
+        public string Relationship { get; set; }   
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Patient\PatientDTO.cs
+﻿using Domain.DTOs.Allergy;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Vaccination;
+
+namespace Domain.DTOs.Patient
+{
+    public class PatientDTO
+    {
+        public string Occupation { get; set; }
+
+        public LifestyleFactorsDTO LifestyleFactors { get; set; }
+        public EmergencyContactInfoDTO EmergancyContact { get; set; }
+
+        public ICollection<OperationDTO> operations { get; set; }
+        public ICollection<AllergyDTO> Allergies { get; set; }
+        public ICollection<VaccinationDTO> Vaccinations { get; set; }
+
+        public ICollection<CaseDTO> Cases{ get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Patient\PatientForUpdatingDTO.cs
+﻿namespace Domain.DTOs.Patient
+{
+    public class PatientForUpdatingDTO
+    {
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Patient\PatientFullDTO.cs
+﻿using Domain.DTOs.Allergy;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Vaccination;
+
+namespace Domain.DTOs.Patient
+{
+    public class PatientFullDTO
+    {
+        public string Username { get; set; }
+        public string Name { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public double Age { get; set; }
+        public double? LatestRecordedWeight { get; set; }
+        public double? LatestRecordedHeight { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
+        public string Occupation { get; set; }
+
+        public LifestyleFactorsDTO LifestyleFactorsDTO { get; set; }
+        public EmergencyContactInfoDTO EmergancyContact { get; set; }
+
+        public ICollection<OperationDTO> operations { get; set; }
+        public ICollection<AllergyDTO> Allergies { get; set; }
+        public ICollection<VaccinationDTO> Vaccinations { get; set; }
+        public ICollection<CaseDTO> Cases { get; set; }
+
+        public ICollection<AppointmentDTO> appointments { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Person\HeightAndWeightDTO.cs
+﻿namespace Domain.DTOs.Person
+{
+    public class HeightAndWeightDTO
+    {
+        public string username { get; set; }
+        public double? LatestRecordedWeight { get; set; }
+        public double? LatestRecordedHeight { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Person\InfoUpdateDTO.cs
+﻿using Data.enums;
+
+namespace Domain.DTOs.Person
+{
+    public class InfoUpdateDTO
+    {
+        public string username { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public double? LatestRecordedWeight { get; set; }
+        public double? LatestRecordedHeight { get; set; }
+        public Gender Gender { get; set; }
+        public string? MaritalStatus { get; set; }
+        public string? Occupation { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Person\newOccupationDTO.cs
+﻿
+namespace Domain.DTOs.Person
+{
+    public class newOccupationDTO
+    {
+        public string Username{ get; set; }
+        public string Occupation { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Person\PersonDTO.cs
+﻿namespace Domain.DTOs.Person
+{
+    public class PersonDTO
+    {
+        public string Username { get; set; }
+        public string Name { get; set; }
+        public string UserType { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public double Age { get; set; }
+        public double? LatestRecordedWeight { get; set; }
+        public double? LatestRecordedHeight { get; set; }
+        public string Gender { get; set; }
+        public string MaritalStatus { get; set; }
+        public string Occupation { get; set; }
+        public string PersonType { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Person\personTypeDTO.cs
+﻿using Data.enums;
+namespace Domain.DTOs.Person
+{
+    public class personTypeDTO
+    {
+        public PersonType PersonType { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Vaccination\VaccinationDTO.cs
+﻿using Data.enums;
+
+namespace Domain.DTOs.Vaccination
+{
+    public class VaccinationDTO
+    {
+        public string Name { get; set; }
+        public DateTime AdministeredDate { get; set; }
+        public string Description { get; set; }
+        public VaccineStatus VaccineStatus { get; set; }
+        public int ShotsLeft { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Vaccination\VaccinationForOutputDTO.cs
+﻿namespace Domain.DTOs.Vaccination
+{
+     public class VaccinationForOutputDTO
+    {
+        public int VaccinationID { get; set; }
+        public string Name { get; set; }
+        public DateTime AdministeredDate { get; set; }
+        public string Description { get; set; }
+        public string VaccineStatus { get; set; }
+        public int ShotsLeft { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Vaccination\VaccinationForUpdatingDTO.cs
+﻿using Data.enums;
+
+namespace Domain.DTOs.Vaccination
+{
+    public class VaccinationForUpdatingDTO
+    {
+        public string? Name { get; set; }
+        public DateTime? AdministeredDate { get; set; }
+        public string? Description { get; set; }
+        public VaccineStatus? VaccineStatus { get; set; }
+        public int? ShotsLeft { get; set; }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IChatService.cs
+﻿using Domain.DTOs.Chats;
+
+namespace Domain.IServices
+{
+    public interface IChatService
+    {
+        Task<IEnumerable<ChatForShowingFromTheOutsideDTO>> GetChatsByUserUsername(string username);
+        Task<IEnumerable<ChatMessageDTO>> BrowseChat(int ChatID);
+        Task<ChatMessageDTO> SendMessage(string senderUsername,string ReciverUsername, CreateChatMessageDTO chat);
+        Task<bool> DeleteMessage(int messageId);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IDoctorService.cs
+﻿using Data.enums;
+using Domain.DTOs;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Patient;
+
+namespace Domain.IServices
+{
+    public interface IDoctorService
+    {
+        Task<IEnumerable<AppointmentDTO>> GetAccpetedAppointments(string doctorUsername);
+        Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername);
+        Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO);
+        Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername);
+        Task<bool> DeleteDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
+        Task<AvaliabilityDTO> AddDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
+        Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
+        Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTO);
+
+        Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorsername);
+        Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername);
+        Task<PatientFullDTO> ViewPatientHistory(string patientUsername);
+        Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername);
+        Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
+        Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
+        Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
+        Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO);
+
+        // Added methods for managing cases and tests
+        Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername);
+        Task<bool> ManageCase(int caseId, CaseDTO caseDTO);
+        Task<IEnumerable<TestDTO>> GetTests(string doctorUsername);
+        Task<TestDTO> AddTest(string doctorUsername, TestDTO testDTO);
+        Task<bool> UpdateTestStatus(int testId, TestStatus status);
+        Task<bool> DeleteTest(int testId);
+
+        // Added methods for managing surgeries
+        Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername);
+        Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO);
+        Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO);
+        Task<bool> CancelSurgery(int surgeryId);
+
+        // Added methods for managing documents
+        Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername);
+        Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO);
+        Task<bool> DeleteDocument(int documentId);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IJWTTokenServices.cs
+﻿using Data.Models;
+
+namespace Domain.IServices
+{
+    public interface IJWTTokenServices
+    {
+        Task<JWTTokens> Authenticate(User user); 
+        Task<JWTTokens> AuthenticateUsingRefreshTokenAsync(Guid RefreshToken);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IMailService.cs
+﻿namespace Domain.IServices
+{
+    public interface IMailService
+    {
+        bool SendMail(string to, string subject, string body);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IMedicationService.cs
+﻿namespace Domain.IServices
+{
+    public interface IMedicationService
+    {
+        //Task<IEnumerable<MedicationDTO>> GetMedications(int patientId);
+        //Task<MedicationDTO> AddMedication(int patientId, MedicationDTO medication);
+        //Task<bool> UpdateMedication(int medicationId, MedicationDTO medication);
+        //Task<bool> DeleteMedication(int medicationId);
+        //Task<bool> RecordMedicationConsumption(int medicationId, DateTime consumptionTime);
+        //Task<bool> SetAlarmReminder(int medicationId, ReminderDTO reminder);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IPatientService.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Allergy;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Patient;
+using Domain.DTOs.Vaccination;
+
+namespace Domain.IServices
+{
+    public interface IPatientService
+    {
+        Task<IEnumerable<DoctorForInputDTO>> BrowseDoctors(string? location , string? specialty, string? name);
+        Task<bool> AddEmergencyContact(string PatientUsername, EmergencyContactInfoDTO emergencyContact);
+        Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate);
+        Task<DoctorForOutputDTO> RequestSecondOpinion(string PatientUsername, string DoctorUsername, string caseDescription);
+        Task<IEnumerable<AppointmentDTO>> ViewPastAppointments(string PatientUsername);
+        Task<IEnumerable<AppointmentDTO>> ViewUpcomingAppointments(string PatientUsername);
+        Task<IEnumerable<AllergyForOutputDTO>> BrowseAllargies (string PatientUsername);
+        Task<AllergyForOutputDTO> AddAllergy(string PatientUsername, AllergyDTO allergy);
+        Task<bool> DeleteAllergy(int allergyId);
+        Task<AllergyForOutputDTO> UpdateAllergy(int allergyId, AllergyDTO updatedAllergy);
+        Task<IEnumerable<VaccinationForOutputDTO>> BrowseVaccination(string PatientUsername);
+        Task<VaccinationForOutputDTO> AddVaccination(string PatientUsername, VaccinationDTO vaccination);
+        Task<bool> DeleteVaccination(int vaccinationId);
+        Task<VaccinationForOutputDTO> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination);
+        Task<PatientFullDTO > ViewFullDetailsPatient(string  PatientUsername);
+
+        Task<LifestyleFactorsDTO> GetLifeStyleFactors(string PatientUsername);
+        Task<LifestyleFactorsDTO> AddLifeStyleFactors(string PatientUsername, LifestyleFactorsDTO LifeStyle);
+        Task<LifestyleFactorsDTO> UpdateLifeStyleFactors(string PatientUsername, LifestyleFactorsForUpdatingDTO LifeStyle);
+
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IPersonService.cs
+﻿using Domain.DTOs.Person;
+
+namespace Domain.IServices
+{
+    public interface IPersonService
+    {
+        Task<PersonDTO> editPersonType(string userName, personTypeDTO personTypeDTO);
+        Task<PersonDTO> UpdateInfo(InfoUpdateDTO infoUpdate);
+        Task<PersonDTO> EditOccupation(newOccupationDTO newOccupation);
+        Task<PersonDTO> EditHightAndWeight(HeightAndWeightDTO infoUpdate);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IUserService.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Login;
+namespace Domain.IServices
+{
+    public interface IUserService
+    {
+        Task<UserDTO> Register(RegisterModelDTO model);
+        Task<JWTTokensDTO> Login(LoginDTO login);
+        Task<bool> AuthinticateEmail(AuthinticateEmailDTO randomNumber);
+        Task<bool> RecovePasswordRequest(RecoverPasswordRequestDTO passwordRequest);
+        Task<bool> ResetPassword (ResetPasswordDTO resetPassword);
+        Task<bool> AddAdress(AddressDTO adress);
+        Task<bool> CheackCredinails(RegisterModelDTO model);
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Mapper\MappingProfile.cs
+﻿using AutoMapper;
+using Data.Models;
+using Data.Models.Data.Models;
+using Domain.DTOs;
+using Domain.DTOs.Allergy;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Chats;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.Login;
+using Domain.DTOs.Patient;
+using Domain.DTOs.Person;
+using Domain.DTOs.Vaccination;
+using System.Reflection.Metadata;
+
+namespace Domain.Mapper
+{
+    public class MappingProfile : Profile
+    {
+        public MappingProfile()
+        {
+            CreateMap<User, RegisterModelDTO>().ReverseMap();
+            CreateMap<JWTTokens, JWTTokensDTO>().ReverseMap();
+            CreateMap<User, Person>().ReverseMap();
+            CreateMap<User, Doctor>().ReverseMap();
+            CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<Person, Patient>().ReverseMap();
+            CreateMap<Person, Doctor>().ReverseMap();
+            CreateMap<Patient, PersonDTO>().ReverseMap();
+            CreateMap<Doctor, PersonDTO>().ReverseMap();
+            CreateMap<Patient, PatientFullDTO>().ReverseMap();
+            CreateMap<Case, CaseDTO>().ReverseMap();
+            //  CreateMap<Nurse, PersonDTO>().ReverseMap();
+            CreateMap<Doctor, DoctorForOutputDTO>().ReverseMap();
+            CreateMap<Doctor, DoctorForInputDTO>().ReverseMap();
+            CreateMap<Appointment, AppointmentDTO>().ReverseMap();
+            CreateMap<Allergy, AllergyForOutputDTO>().ReverseMap();
+            CreateMap<Allergy, AllergyDTO>().ReverseMap();
+            CreateMap<Vaccination, VaccinationForOutputDTO>().ReverseMap();
+            CreateMap<Allergy, VaccinationDTO>().ReverseMap();
+            CreateMap<ChatMessage, ChatMessageDTO>().ReverseMap();
+            CreateMap<ChatMessage, CreateChatMessageDTO>().ReverseMap();
+            // Added mappings for cases, tests, surgeries, documents, etc.
+            CreateMap<Test, TestDTO>().ReverseMap();
+            CreateMap<Surgery, SurgeryDTO>().ReverseMap();
+            CreateMap<Document, DocumentDTO>().ReverseMap();
+            CreateMap<MedicalSecondOpinion, MedicalSecondOpinionDTO>().ReverseMap();
+            CreateMap<TreatmentPlan, TreatmentPlanDTO>().ReverseMap();
+            CreateMap<Drug, DrugDTO>().ReverseMap();
+
+
+
+        }
+    }
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\ChatService.cs
+﻿using Domain.IServices;
+using Data.Interfaces;
+using Data.Models;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Domain.DTOs.Chats;
+
+namespace Domain.Services
+{
+    public class ChatService : IChatService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+
+        public ChatService(IUnitOfWork unitOfWork, IMapper mapper)
+        {
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+        }
+
+        public async Task<IEnumerable<ChatForShowingFromTheOutsideDTO>> GetChatsByUserUsername(string username)
+        {
+            var userChats = await _unitOfWork.GetRepositories<Chat>()
+                .Get()
+                .Include(c => c.Messages)
+                .Include(c => c.SecondParty)
+                .Include(c => c.FirstParty)
+                .Where(c => c.FirstParty.Username == username || c.SecondParty.Username == username)
+                .ToListAsync();
+
+            var chatDtos = new List<ChatForShowingFromTheOutsideDTO>();
+
+            foreach (var chat in userChats)
+            {
+                var lastMessage = chat.Messages.OrderByDescending(m => m.SentDateTime).FirstOrDefault();
+                var unreadMessagesCount = chat.Messages.Count(m => !m.IsRead && m.SenderUsername != username);
+
+                var chatDto = new ChatForShowingFromTheOutsideDTO
+                {
+                    ChatId = chat.ChatID,
+                    FirstPartyUserName = chat.FirstParty.Username,
+                    SecondPartyUsername = chat.SecondParty.Username,
+                    IsTheLastSenderMe = lastMessage != null && lastMessage.SenderUsername == username,
+                    lastSentMassagess = lastMessage?.MessageContent,
+                    numberOfMessages = unreadMessagesCount
+                };
+
+                chatDtos.Add(chatDto);
+            }
+
+            return chatDtos;
+        }
+
+        public async Task<IEnumerable< ChatMessageDTO>> BrowseChat(int ChatID)
+        {
+            var chat = await _unitOfWork.GetRepositories<Chat>()
+                .Get()
+                .Include(c => c.Messages)
+                .Include(c => c.FirstParty)
+                .Include(c => c.SecondParty)
+                .FirstOrDefaultAsync(c => c.ChatID == ChatID);
+
+            var lastMessage = chat?.Messages.OrderByDescending(m => m.SentDateTime).ToList();
+            return _mapper.Map<IEnumerable<ChatMessageDTO>>(lastMessage);
+        }
+
+        public async Task<ChatMessageDTO> SendMessage(string senderUsername, string receiverUsername, CreateChatMessageDTO chatMessageDTO)
+        {
+            var chat = await _unitOfWork.GetRepositories<Chat>()
+                .Get()
+                .Include(c => c.Messages)
+                .Include(c => c.FirstParty)
+                .Include(c => c.SecondParty)
+                .FirstOrDefaultAsync(c => (c.FirstParty.Username == senderUsername && c.SecondParty.Username == receiverUsername) ||
+                                           (c.FirstParty.Username == receiverUsername && c.SecondParty.Username == senderUsername));
+
+            if (chat == null)
+            {
+                var firstParty = await _unitOfWork.GetRepositories<User>().Get().FirstOrDefaultAsync(p => p.Username == senderUsername );
+                var secondParty = await _unitOfWork.GetRepositories<User>().Get().FirstOrDefaultAsync(d => d.Username == receiverUsername);
+                if (firstParty == null || secondParty == null) return null;
+                chat = new Chat
+                {
+                    FirstParty = firstParty,
+                    SecondParty = secondParty,
+                    Messages = new List<ChatMessage>()
+                };
+                chat = await _unitOfWork.GetRepositories<Chat>().Add(chat);
+            }
+
+            var chatMessage = _mapper.Map<ChatMessage>(chatMessageDTO);
+            chatMessage.SenderUsername = senderUsername;
+            chat.Messages.Add(chatMessage);
+            await _unitOfWork.GetRepositories<Chat>().Update(chat);
+
+            return _mapper.Map<ChatMessageDTO>(chatMessage);
+        }
+
+        public async Task<bool> DeleteMessage(int messageId)
+        {
+            var message = await _unitOfWork.GetRepositories<ChatMessage>().Get().FirstOrDefaultAsync(m => m.ChatMessageID == messageId);
+            if (message == null) return false;
+
+            await _unitOfWork.GetRepositories<ChatMessage>().Delete(message);
+            return true;
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\DoctorService.cs
+﻿using AutoMapper;
+using Data.enums;
+using Data.Interfaces;
+using Data.Models;
+using Domain.DTOs;
+using Domain.DTOs.Cases;
+using Domain.DTOs.Patient;
+using Domain.IServices;
+using Microsoft.EntityFrameworkCore;
+namespace Domain.Services
+{
+    public class DoctorService : IDoctorService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+
+        public DoctorService(IUnitOfWork unitOfWork, IMapper mapper)
+        {
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> GetAccpetedAppointments(string doctorUsername)
+        {
+            var appointments = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Accepted)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername)
+        {
+            var appointments = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)
+                .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Pending)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        }
+
+        public async Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO)
+        {
+            var appointment = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+
+            if (appointment == null) return false;
+
+            appointment.Status = appointmentDTO.Status;
+            appointment.Description = appointmentDTO.Description;
+            appointment.DoctorNotes = appointmentDT;
+
+            await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
+            return true;
+        }
+
+        public async Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername)
+        {
+            var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
+                .Get()
+                .Include(a => a.Doctor)
+                .Where(a => a.Doctor.Username == doctorUsername)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+        }
+
+        public async Task<bool> DeleteDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
+        {
+            var availability = await _unitOfWork.GetRepositories<Avaliability>()
+                .Get()
+                .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+
+            if (availability == null) return false;
+
+            await _unitOfWork.GetRepositories<Avaliability>().Delete(availability);
+            return true;
+        }
+
+        public async Task<AvaliabilityDTO> AddDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == availabilityDTO.DoctorID.ToString());
+
+            if (doctor == null) return null;
+
+            var availability = _mapper.Map<Avaliability>(availabilityDTO);
+            availability.Doctor = doctor;
+
+            await _unitOfWork.GetRepositories<Avaliability>().Add(availability);
+            return _mapper.Map<AvaliabilityDTO>(availability);
+        }
+
+        public async Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
+        {
+            var availability = await _unitOfWork.GetRepositories<Avaliability>()
+                .Get()
+                .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+
+            if (availability == null) return null;
+
+            availability.DayOfWeek = availabilityDTO.DayOfWeek;
+            availability.StartHour = availabilityDTO.StartHour;
+            availability.EndHour = availabilityDTO.EndHour;
+
+            await _unitOfWork.GetRepositories<Avaliability>().Update(availability);
+            return _mapper.Map<AvaliabilityDTO>(availability);
+        }
+
+        public async Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTOs)
+        {
+            var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
+                .Get()
+                .Where(a => a.AvalibailityID == availabilityId)
+                .ToListAsync();
+
+            foreach (var availability in availabilities)
+            {
+                var dto = availabilityDTOs.FirstOrDefault(a => a.DoctorID == availability.DoctorID);
+                if (dto != null)
+                {
+                    availability.DayOfWeek = dto.DayOfWeek;
+                    availability.StartHour = dto.StartHour;
+                    availability.EndHour = dto.EndHour;
+                }
+            }
+
+            await _unitOfWork.GetRepositories<Avaliability>().UpdateRange(availabilities);
+            return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+        }
+
+        public async Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorsername)
+        {
+            // Implementation for getting upcoming appointment reminders
+            throw new NotImplementedException();
+        }
+
+        public async Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername)
+        {
+            // Implementation for requesting access to patient data
+            throw new NotImplementedException();
+        }
+
+        public async Task<PatientFullDTO> ViewPatientHistory(string patientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.Allergies)
+                .Include(p => p.Vaccinations)
+                .Include(p => p.cases)
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            return _mapper.Map<PatientFullDTO>(patient);
+        }
+
+        public async Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.RelatedDocuments)
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            return _mapper.Map<IEnumerable<DocumentDTO>>(patient?.RelatedDocuments);
+        }
+
+        public async Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .Include(d => d.credential)
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (doctor == null) return null;
+
+            var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialID);
+            if (credential == null) return null;
+
+            credential.CredentialType = doctorCredential.CredentialType;
+            credential.CredentialValue = doctorCredential.CredentialValue;
+
+            await _unitOfWork.GetRepositories<Credential>().Update(credential);
+            return _mapper.Map<CredentialDTO>(credential);
+        }
+
+        public async Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .Include(d => d.credential)
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (doctor == null) return false;
+
+            var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.);
+            if (credential == null) return false;
+
+            await _unitOfWork.GetRepositories<Credential>().Delete(credential);
+            return true;
+        }
+
+        public async Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .Include(d => d.credential)
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (doctor == null) return null;
+
+            var credential = _mapper.Map<Credential>(doctorCredential);
+            doctor.credential.Add(credential);
+
+            await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
+            return _mapper.Map<CredentialDTO>(credential);
+        }
+
+        public async Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (doctor == null) return false;
+
+            doctor.DoctorWorkType = specializationDTO;
+            await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
+            return true;
+        }
+
+        public async Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername)
+        {
+            var cases = await _unitOfWork.GetRepositories<Case>()
+                .Get()
+                .Include(c => c.Doctor)
+                .Include(c => c.Patient)
+                .Where(c => c.Doctor.Username == doctorUsername)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<CaseDTO>>(cases);
+        }
+
+        public async Task<bool> ManageCase(int caseId, CaseDTO caseDTO)
+        {
+            var caseEntity = await _unitOfWork.GetRepositories<Case>()
+                .Get()
+                .FirstOrDefaultAsync(c => c.CaseId == caseId);
+
+            if (caseEntity == null) return false;
+
+            caseEntity.Title = caseDTO.Title;
+            caseEntity.CaseDescription = caseDTO.CaseDescription;
+            caseEntity.Diagnosis = caseDTO.Diagnosis;
+            caseEntity.Notes = caseDTO.Notes;
+            caseEntity.LastUpdated = caseDTO.LastUpdated;
+            caseEntity.NextAppointmentDate = caseDTO.NextAppointmentDate;
+
+            await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+            return true;
+        }
+
+        public async Task<IEnumerable<TestDTO>> GetTests(string doctorUsername)
+        {
+            var tests = await _unitOfWork.GetRepositories<Test>()
+                .Get()
+                .Include(t => t.Doctor)
+                .Include(t => t.Patient)
+                .Where(t => t.Doctor.Username == doctorUsername)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<TestDTO>>(tests);
+        }
+
+        public async Task<> AddTest(string doctorUsername, TestDTO testDTO)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .FirstOrDefaultAsync(p => p.PatientID == testDTO.PatientID);
+
+            if (doctor == null || patient == null) return null;
+
+            var test = _mapper.Map<Test>(testDTO);
+            test.Doctor = doctor;
+            test.Patient = patient;
+
+            await _unitOfWork.GetRepositories<Test>().Add(test);
+            return _mapper.Map<TestDTO>(test);
+        }
+
+        public async Task<bool> UpdateTestStatus(int testId, TestStatus status)
+        {
+            var test = await _unitOfWork.GetRepositories<Test>()
+                .Get()
+                .FirstOrDefaultAsync(t => t.TestID == testId);
+
+            if (test == null) return false;
+
+            test.Status = status;
+
+            await _unitOfWork.GetRepositories<Test>().Update(test);
+            return true;
+        }
+
+        public async Task<bool> DeleteTest(int testId)
+        {
+            var test = await _unitOfWork.GetRepositories<Test>()
+                .Get()
+                .FirstOrDefaultAsync(t => t.TestID == testId);
+
+            if (test == null) return false;
+
+            await _unitOfWork.GetRepositories<Test>().Delete(test);
+            return true;
+        }
+
+        public async Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername)
+        {
+            var surgeries = await _unitOfWork.GetRepositories<Surgery>()
+                .Get()
+                .Include(s => s.Doctor)
+                .Include(s => s.Patient)
+                .Where(s => s.Doctor.Username == doctorUsername)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<SurgeryDTO>>(surgeries);
+        }
+
+        public async Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .FirstOrDefaultAsync(p => p.PatientID == surgeryDTO.PatientId);
+
+            if (doctor == null || patient == null) return false;
+
+            var surgery = _mapper.Map<Surgery>(surgeryDTO);
+            surgery.Doctor = doctor;
+            surgery.Patient = patient;
+
+            await _unitOfWork.GetRepositories<Surgery>().Add(surgery);
+            return true;
+        }
+
+        public async Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO)
+        {
+            var surgery = await _unitOfWork.GetRepositories<Surgery>()
+                .Get()
+                .FirstOrDefaultAsync(s => s.OperationID == surgeryId);
+
+            if (surgery == null) return false;
+
+            surgery.OperationName = surgeryDTO.SurgeryName;
+            surgery.Description = surgeryDTO.Description;
+            surgery.SurgeryDate = surgeryDTO.SurgeryDate;
+            surgery.SurgeryStatus = surgeryDTO.Status;
+            surgery.SurgeryNotes = surgeryDTO.Notes;
+
+            await _unitOfWork.GetRepositories<Surgery>().Update(surgery);
+            return true;
+        }
+
+        public async Task<bool> CancelSurgery(int surgeryId)
+        {
+            var surgery = await _unitOfWork.GetRepositories<Surgery>()
+                .Get()
+                .FirstOrDefaultAsync(s => s.OperationID == surgeryId);
+
+            if (surgery == null) return false;
+
+            await _unitOfWork.GetRepositories<Surgery>().Delete(surgery);
+            return true;
+        }
+
+        public async Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .Include(d => d.RelatedDocumtents)
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            return _mapper.Map<IEnumerable<DocumentDTO>>(doctor?.RelatedDocumtents);
+        }
+
+        public async Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO)
+        {
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (doctor == null) return null;
+
+            var document = _mapper.Map<Documents>(documentDTO);
+            document.User = doctor;
+
+            await _unitOfWork.GetRepositories<Documents>().Add(document);
+            return _mapper.Map<DocumentDTO>(document);
+        }
+
+        public async Task<bool> DeleteDocument(int documentId)
+        {
+            var document = await _unitOfWork.GetRepositories<Documents>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.DocumentId == documentId);
+
+            if (document == null) return false;
+
+            await _unitOfWork.GetRepositories<Documents>().Delete(document);
+            return true;
+        }
+
+        Task<IEnumerable<CaseDTO>> IDoctorService.ViewCases(string doctorUsername)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> ManageCase(int caseId, CaseDTO caseDTO)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<TestDTO> IDoctorService.AddTest(string doctorUsername, TestDTO testDTO)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\JWTTokentService.cs
+﻿using Data.Models;
+using Domain.IServices;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Data.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace Domain.Services
+{
+    public class JWTTokentService : IJWTTokenServices
+    {
+        private readonly IConfiguration _configuration;
+        private readonly IUnitOfWork _context;
+      
+
+        public JWTTokentService(IConfiguration configuration, IUnitOfWork context)
+        {
+            _configuration = configuration;
+            _context = context;
+         
+        }
+        public async Task<JWTTokens> Authenticate(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JWTToken:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+            new Claim(ClaimTypes.Name, user.Username)
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+            var refreshToken = Guid.NewGuid();
+            var x = new JWTTokensRefresh { RefreshToken = refreshToken, UserID = user.Id };
+            var ExistingRefreshToken = await _context.GetRepositories<JWTTokensRefresh>().Get().Where(x=> x.UserID ==  user.Id).FirstOrDefaultAsync();
+            if (ExistingRefreshToken == null) await _context.GetRepositories<JWTTokensRefresh>().Add(x);
+
+            else
+            {
+                ExistingRefreshToken.RefreshToken = refreshToken;
+                await _context.GetRepositories<JWTTokensRefresh>().Update(ExistingRefreshToken);
+            }
+
+
+            return new JWTTokens
+            {
+                Token = tokenString,
+                refToken = refreshToken.ToString(),
+            };
+        }
+
+        public Task<JWTTokens> AuthenticateUsingRefreshTokenAsync(Guid RefreshToken)
+        {
+           var user = _context.GetRepositories<JWTTokensRefresh>().Get().Include(x=> x.user).Where(x=> x.RefreshToken ==  RefreshToken).FirstOrDefault().user;
+            if (user != null) { return Authenticate(user); }
+            else return null;
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\MailService.cs
+﻿using Domain.IServices;
+using Microsoft.Extensions.Configuration;
+using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+
+namespace Domain.Services
+{
+    public class MailService : IMailService
+    {
+        private readonly IConfiguration _configuration;
+
+        public MailService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public bool SendMail(string to, string subject, string body)
+        {
+            
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("", _configuration["MailSettings:SenderEmail"])); 
+            message.To.Add(new MailboxAddress("", to)); 
+            message.Subject = subject;
+            message.Body = new TextPart("plain") { Text = body };
+
+            try
+            {
+                using (var client = new SmtpClient())
+                {
+                    client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                    client.Authenticate(_configuration["MailSettings:SenderEmail"], _configuration["MailSettings:SenderPassword"]);
+                    client.Send(message);
+                    client.Disconnect(true);
+                }
+            }
+            catch { return false;  }
+            return true;
+        }
+    }
+    }
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\PatientService.cs
+﻿using Data.Models.Data.Models;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.Patient;
+using Domain.DTOs;
+using Domain.IServices;
+using Data.Interfaces;
+using Data.Models;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Data.enums;
+using Domain.DTOs.Allergy;
+using Domain.DTOs.Vaccination;
+using Domain.DTOs.LifestyleFactors;
+
+namespace Domain.Services
+{
+    public class PatientService : IPatientService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+
+        public PatientService(IUnitOfWork unitOfWork, IMapper mapper)
+        {
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+        }
+
+        public async Task<IEnumerable<DoctorForInputDTO>> BrowseDoctors(string? location, string? specialty, string? name)
+        {
+            var doctorsQuery = _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .Include(d => d.Addresses)
+                .Where(d =>
+                    (string.IsNullOrEmpty(specialty) || d.Specialization == specialty) &&
+                    (string.IsNullOrEmpty(name) || d.Name.Contains(name)) &&
+                    (string.IsNullOrEmpty(location) || d.Addresses.Any(c =>
+                        c.Country.Contains(location) ||
+                        c.State.Contains(location) ||
+                        c.City.Contains(location) ||
+                        c.PostalCode.Contains(location) ||
+                        c.StreetAddress.Contains(location)
+                    ))
+                );
+
+            var doctors = await doctorsQuery.ToListAsync();
+            return _mapper.Map<IEnumerable<DoctorForInputDTO>>(doctors);
+        }
+
+        public async Task<bool> AddEmergencyContact(string patientUsername, EmergencyContactInfoDTO emergencyContact)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.EmergencyContactInfo)
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            if (patient == null)
+                return false;
+
+            var newEmergencyContact = await _unitOfWork.GetRepositories<Person>()
+                .Get()
+                .FirstOrDefaultAsync(u => u.Username == emergencyContact.Username);
+
+            if (newEmergencyContact == null)
+                return false;
+
+            var emergencyContactInfo = new EmergencyContactInfo
+            {
+                Relationship = emergencyContact.Relationship,
+                Patient = patient,
+                Person = newEmergencyContact
+            };
+
+            await _unitOfWork.GetRepositories<EmergencyContactInfo>().Add(emergencyContactInfo);
+            
+            return true;
+        }
+
+        public async Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (patient == null || doctor == null)
+                return false;
+
+            var appointment = new Appointment
+            {
+                Date = appointmentDate,
+                Doctor = doctor,
+                Patient = patient,
+                Status = AppointmentStatus.Pending 
+            };
+
+            await _unitOfWork.GetRepositories<Appointment>().Add(appointment);
+            return true;
+        }
+
+        public async Task<DoctorForOutputDTO> RequestSecondOpinion(string patientUsername, string doctorUsername, string caseDescription)
+        {
+            // this still needs adjusting after giving the doctor full access 
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            var doctor = await _unitOfWork.GetRepositories<Doctor>()
+                .Get()
+                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+            if (patient == null || doctor == null)
+                return null; 
+
+            var appointment = new Appointment
+            {
+                Date = DateTime.UtcNow, 
+                Doctor = doctor,
+                Patient = patient,
+                Status = AppointmentStatus.Pending, 
+                Description = caseDescription 
+            };
+            await _unitOfWork.GetRepositories<Appointment>().Add(appointment);
+            return _mapper.Map<DoctorForOutputDTO>(doctor);
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> ViewPastAppointments(string patientUsername)
+        {
+            var appointments = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .Include(c=> c.Patient)
+                .Include(d=> d.Doctor)
+                .Where(a => a.Patient.Username == patientUsername && a.Status == AppointmentStatus.Ended)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> ViewUpcomingAppointments(string patientUsername)
+        {
+            var appointments = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .Include(c=> c.Patient)
+                .Where(a => a.Patient.Username == patientUsername && a.Date >= DateTime.Now && a.Status == AppointmentStatus.Accepted)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        }
+
+        public async Task<AllergyForOutputDTO> AddAllergy(string patientUsername, AllergyDTO allergy)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p=>p.Allergies)
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+            if (patient == null)
+                return null;
+
+            var newAllergy = _mapper.Map<Allergy>(allergy);
+            newAllergy.Patient = patient;
+
+            var x= await _unitOfWork.GetRepositories<Allergy>().Add(newAllergy);
+            
+            return _mapper.Map<AllergyForOutputDTO>(x);
+        }
+
+        public async Task<bool> DeleteAllergy(int allergyId)
+        {
+            var allergy = await _unitOfWork.GetRepositories<Allergy>().Get().Where(c=> c.AllergyID == allergyId).FirstOrDefaultAsync();
+            if (allergy == null)
+                return false;
+
+            _unitOfWork.GetRepositories<Allergy>().Delete(allergy);
+            return true;
+        }
+
+        public async Task<AllergyForOutputDTO> UpdateAllergy(int allergyId, AllergyDTO updatedAllergy)
+        {
+            var allergy = await _unitOfWork.GetRepositories<Allergy>().Get().Where(c=> c.AllergyID == allergyId).FirstOrDefaultAsync();
+            if (allergy == null)
+                return null;
+
+            allergy.Allergey = !string.IsNullOrEmpty(updatedAllergy.Allergey) ? updatedAllergy.Allergey : allergy.Allergey;
+            allergy.ReactionDescription = !string.IsNullOrEmpty(updatedAllergy.ReactionDescription) ? updatedAllergy.ReactionDescription : allergy.ReactionDescription;
+            allergy.Severity = !string.IsNullOrEmpty(updatedAllergy.Severity) ? updatedAllergy.Severity : allergy.Severity;
+
+            await _unitOfWork.GetRepositories<Allergy>().Update(allergy);
+            return _mapper.Map<AllergyForOutputDTO>(allergy);
+        }
+
+        public async Task<IEnumerable<AllergyForOutputDTO>> BrowseAllargies(string PatientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.Allergies)
+                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
+
+            if (patient == null)
+                return Enumerable.Empty<AllergyForOutputDTO>(); 
+            var allergyDTOs = patient.Allergies.Select(allergy => _mapper.Map<AllergyForOutputDTO>(allergy));
+
+            return allergyDTOs;
+        }
+
+
+        public async Task<IEnumerable<VaccinationForOutputDTO>> BrowseVaccination(string PatientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.Vaccinations)
+                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
+
+            if (patient == null)
+                return Enumerable.Empty<VaccinationForOutputDTO>(); 
+            var vaccinationDTOs = patient.Vaccinations.Select(vaccination => _mapper.Map<VaccinationForOutputDTO>(vaccination));
+
+            return vaccinationDTOs;
+        }
+
+
+        public async Task<VaccinationForOutputDTO> AddVaccination(string PatientUsername, VaccinationDTO vaccination)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
+
+            if (patient == null)
+                return null;
+
+
+            var newAllergy = _mapper.Map<Vaccination>(vaccination);
+            newAllergy.Patient = patient;
+
+            var x = await _unitOfWork.GetRepositories<Vaccination>().Add(newAllergy);
+
+            return _mapper.Map<VaccinationForOutputDTO>(x);
+        }
+
+
+        public async Task<bool> DeleteVaccination(int vaccinationId)
+        {
+            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(c=> c.VaccinationID ==vaccinationId).FirstOrDefaultAsync();
+            if (vaccination == null)
+                return false; 
+
+            await _unitOfWork.GetRepositories<Vaccination>().Delete(vaccination);
+            return true;
+        }
+        public async Task<VaccinationForOutputDTO> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination)
+        {
+            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v=> v.VaccinationID == vaccinationId).FirstOrDefaultAsync();
+            if (vaccination == null)
+                return null;
+
+            var vaccinationType = typeof(VaccinationForUpdatingDTO);
+            var vaccinationProperties = vaccinationType.GetProperties();
+
+            foreach (var property in vaccinationProperties)
+            {
+                var newValue = property.GetValue(updatedVaccination);
+                if (newValue != null)
+                {
+                    var vaccinationProperty = vaccination.GetType().GetProperty(property.Name);
+                    if (vaccinationProperty != null)
+                    {
+                        vaccinationProperty.SetValue(vaccination, newValue);
+                    }
+                }
+            }
+
+            var x= await _unitOfWork.GetRepositories<Vaccination>().Update(vaccination);
+
+            return _mapper.Map<VaccinationForOutputDTO>(x);
+        }
+
+        public async Task<PatientFullDTO> ViewFullDetailsPatient(string patientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+                .Get()
+                .Include(p => p.EmergancyContact)
+                .Include(p => p.Allergies)
+                .Include(p => p.Vaccinations)
+                .Include(p => p.cases)
+                .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+
+            if (patient == null)
+                return null;
+
+            var patientDTO = _mapper.Map<PatientFullDTO>(patient);
+            return patientDTO;
+        }
+
+        public async Task<LifestyleFactorsDTO> AddLifeStyleFactors(string PatientUsername, LifestyleFactorsDTO LifeStyle)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+             .Get().Include(c=> c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+
+            if (patient == null)
+                return null;
+            if(patient.LifestyleFactors == null)
+            {
+                patient.LifestyleFactors = _mapper.Map<LifestyleFactors>(LifeStyle);
+            }
+            await _unitOfWork.GetRepositories<Patient>().Update(patient);
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+        }
+
+        public async Task<LifestyleFactorsDTO> UpdateLifeStyleFactors(string PatientUsername, LifestyleFactorsForUpdatingDTO LifeStyle)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+              .Get().Include(c => c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+
+            if (patient == null)
+                return null;
+            if (patient.LifestyleFactors == null)
+            {
+                patient.LifestyleFactors = _mapper.Map<LifestyleFactors>(LifeStyle);
+            }
+            else
+            {
+                patient.LifestyleFactors.DietaryPreferences = !string.IsNullOrEmpty(LifeStyle.DietaryPreferences) ? LifeStyle.DietaryPreferences : patient.LifestyleFactors.DietaryPreferences;
+                patient.LifestyleFactors.IsAlcoholConsumer = LifeStyle.IsAlcoholConsumer.HasValue ?(bool) LifeStyle.IsAlcoholConsumer : patient.LifestyleFactors.IsAlcoholConsumer;
+                patient.LifestyleFactors.IsSmoker = LifeStyle.IsSmoker.HasValue ? (bool)LifeStyle.IsSmoker : patient.LifestyleFactors.IsAlcoholConsumer;
+                patient.LifestyleFactors.ExerciseHabits = !string.IsNullOrEmpty(LifeStyle.ExerciseHabits) ? LifeStyle.ExerciseHabits : patient.LifestyleFactors.ExerciseHabits;
+            }
+            await _unitOfWork.GetRepositories<Patient>().Update(patient);
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+        }
+
+        public async Task<LifestyleFactorsDTO> GetLifeStyleFactors(string PatientUsername)
+        {
+            var patient = await _unitOfWork.GetRepositories<Patient>()
+              .Get().Include(c => c.LifestyleFactors).Where(p => p.Username == PatientUsername).FirstOrDefaultAsync();
+            return _mapper.Map<LifestyleFactorsDTO>(patient.LifestyleFactors);
+
+        }
+    }
+
+
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\PersonService.cs
+﻿using AutoMapper;
+using Data.enums;
+using Data.Interfaces;
+using Data.Models;
+using Domain.DTOs.Person;
+using Domain.IServices;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Domain.Services
+{
+    public class PersonService : IPersonService
+    {
+        private readonly IUnitOfWork _context;
+        private readonly IMapper _mapper;
+
+        public PersonService(IUnitOfWork unitOfWork , IMapper mapper) { 
+            _context = unitOfWork;
+            _mapper = mapper;
+        }
+        public async Task<PersonDTO> EditHightAndWeight(HeightAndWeightDTO infoUpdate)
+        {
+            var existingUser = await _context.GetRepositories<User>()
+                                      .Get()
+                                      .Where(_ => _.UserType == UserType.Person.ToString())
+                                      .OfType<Person>()
+                                      .FirstOrDefaultAsync();
+            if (existingUser == null) return null;
+            if (infoUpdate.LatestRecordedWeight.HasValue)existingUser.LatestRecordedWeight = infoUpdate.LatestRecordedWeight.Value;
+            if (infoUpdate.LatestRecordedHeight.HasValue)existingUser.LatestRecordedHeight = infoUpdate.LatestRecordedHeight.Value;
+            await _context.GetRepositories<Person>().Update(existingUser);
+            var temp =  _mapper.Map<PersonDTO>(existingUser);
+            temp.Age = (DateTime.Now - temp.DateOfBirth).TotalDays / 365.25;
+            return temp;
+
+        }
+
+        public async Task<PersonDTO> EditOccupation(newOccupationDTO newOccupation)
+        {
+            var existingUser = await _context.GetRepositories<Person>().Get().Where(_ => _.Username == newOccupation.Username).FirstOrDefaultAsync();
+            if (existingUser == null) return null;
+            existingUser.Occupation = newOccupation.Occupation;
+            await _context.GetRepositories<Person>().Update(existingUser);
+            var temp = _mapper.Map<PersonDTO>(existingUser);
+            temp.Age = (DateTime.Now - temp.DateOfBirth).TotalDays / 365.25;
+            return temp;
+        }
+
+        public async Task<PersonDTO> editPersonType(string userName,personTypeDTO personTypeDTO)
+        {
+            var existingUser = await _context.GetRepositories<Person>().Get().Where(p=> p.Username == userName).FirstOrDefaultAsync();
+
+            try
+            {
+              
+                existingUser.PersonType = personTypeDTO.PersonType;
+                await _context.GetRepositories<Person>().Delete(existingUser);
+                existingUser.Id = 0;
+                if (personTypeDTO.PersonType == PersonType.Patient) await _context.GetRepositories<Patient>().Add(_mapper.Map<Patient>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Doctor) await _context.GetRepositories<Doctor>().Add(_mapper.Map<Doctor>(existingUser));
+                //if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+
+            }catch (Exception ex)
+            {
+                return null;
+            }
+            return _mapper.Map<PersonDTO>(existingUser);
+
+
+        }
+
+        public async Task<PersonDTO> UpdateInfo(InfoUpdateDTO infoUpdate)
+        {
+            var existingUser = await _context.GetRepositories<Person>().Get().Where(_ => _.Username == infoUpdate.username).FirstOrDefaultAsync();
+            if (existingUser == null) return null;
+            if (infoUpdate.LatestRecordedWeight.HasValue) existingUser.LatestRecordedWeight = infoUpdate.LatestRecordedWeight.Value;
+            if (infoUpdate.LatestRecordedHeight.HasValue) existingUser.LatestRecordedHeight = infoUpdate.LatestRecordedHeight.Value;
+            if (!infoUpdate.MaritalStatus.IsNullOrEmpty()) existingUser.MaritalStatus= infoUpdate.MaritalStatus;
+            if (!infoUpdate.Occupation.IsNullOrEmpty()) existingUser.Occupation= infoUpdate.Occupation;
+            existingUser.Gender = infoUpdate.Gender;
+            await _context.GetRepositories<Person>().Update(existingUser);
+            var temp = _mapper.Map<PersonDTO>(existingUser);
+            temp.Age = (DateTime.Now - temp.DateOfBirth).TotalDays / 365.25;
+            return temp;
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\UserService.cs
+﻿using AutoMapper;
+using Data.enums;
+using Data.Interfaces;
+using Data.Models;
+using Domain.DTOs;
+using Domain.DTOs.Login;
+using Domain.IServices;
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Generators;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace Domain.Services
+{
+    public class UserService : IUserService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMailService _mailService;
+        private readonly IMapper _mapper;
+        private readonly IJWTTokenServices _jWTTokenServices;
+
+        public UserService (IUnitOfWork unitOfWork, IMailService mailService,IMapper mapper,IJWTTokenServices jWTTokenServices)
+        {
+            _unitOfWork = unitOfWork;
+            _mailService = mailService;
+            _mapper = mapper;
+            _jWTTokenServices = jWTTokenServices;
+        }
+
+        public Task<bool> AddAdress(AddressDTO adress)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<bool> AuthinticateEmail(AuthinticateEmailDTO randomNumber)
+        {
+            var x= await _unitOfWork.GetRepositories<User>().Get().Where(r=> r.Username == randomNumber.Username).FirstOrDefaultAsync();
+            if (x == null) return false;
+            if (x.RandomStringEmailConfirmations != randomNumber.AuthinticationNumber) return false;    
+            x.IsEmailConfirmed = true;
+            await _unitOfWork.GetRepositories<User>().Update(x);
+            return true;
+            
+        }
+
+        public bool IsValidEmail(string email)
+        {
+            string pattern = @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
+            return Regex.IsMatch(email, pattern);
+        }
+        public async Task<bool> CheackCredinails(RegisterModelDTO model)
+        {
+            if (!IsValidEmail(model.Email)) { return false; }
+            var x = await _unitOfWork.GetRepositories<User>().Get().Where(x => x.Username == model.Username || x.Email == model.Email).FirstOrDefaultAsync();
+
+            if (x != null) { return false;  }
+            return true;
+        }
+
+        public async Task<JWTTokensDTO> Login(LoginDTO Dto)
+        {
+           var user =await _unitOfWork.GetRepositories<User>().Get().Where(r=>r.Username == Dto.Username).FirstOrDefaultAsync();
+            var hashed_pass = "";
+             using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(Dto.Password));
+                hashed_pass = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
+            if (hashed_pass != user.Password) return new JWTTokensDTO { refToken ="",Token="" };
+            var temp = _jWTTokenServices.Authenticate(user).Result;
+            return new JWTTokensDTO { refToken = temp.refToken,Token = temp.Token };
+        }
+
+        public async Task<bool> RecovePasswordRequest(RecoverPasswordRequestDTO passwordRequest)
+        {
+            var x = await _unitOfWork.GetRepositories<User>().Get().Where(r => (r.Username == passwordRequest.Username || r.Email == passwordRequest.Email) && r.IsEmailConfirmed).FirstOrDefaultAsync();
+            if (x == null) return false;
+            var random = GenerateRandomString(6);
+            _mailService.SendMail(x.Email, "Recover Password", $"hi {x.Name}, forgot your password, heres the code to reseat it {random}, please don't share this code with anyone");
+            x.RandomStringEmailConfirmations = random;
+            await _unitOfWork.GetRepositories<User>().Update(x);
+            return true;
+        }
+
+        public string GenerateRandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            StringBuilder sb = new StringBuilder();
+            Random random = new Random();
+
+            for (int i = 0; i < length; i++)
+            {
+                sb.Append(chars[random.Next(chars.Length)]);
+            }
+
+            return sb.ToString();
+        }
+        public async Task<UserDTO> Register(RegisterModelDTO model)
+        {
+            if (!CheackCredinails(model).Result) return null;
+            var AddedUser = _mapper.Map<User>(model);
+            AddedUser.IsEmailConfirmed = false;
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
+                AddedUser.Password = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
+            AddedUser.RandomStringEmailConfirmations = GenerateRandomString(6);
+            _mailService.SendMail(AddedUser.Email, "Email Confirmations", $"welcome to mediConnect Plus, your confirmation code is {AddedUser.RandomStringEmailConfirmations}");
+            UserDTO x = null;
+            if (model.UserType == UserType.Person)x=_mapper.Map<UserDTO>(await _unitOfWork.GetRepositories<Person>().Add(_mapper.Map<Person>(AddedUser) ));
+                                                   //await _unitOfWork.GetRepositories<Person>().Add(AddedUser);
+                return x;
+        }
+
+        public async Task<bool> ResetPassword(ResetPasswordDTO resetPassword)
+        {
+            var x = await _unitOfWork.GetRepositories<User>().Get().Where(r => r.Username == resetPassword.Username).FirstOrDefaultAsync();
+            if (x == null) return false;
+            if (x.RandomStringEmailConfirmations != resetPassword.RandomNumber) return false;
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(resetPassword.Password));
+                x.Password = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            }
+            await _unitOfWork.GetRepositories<User>().Update(x);
+            return true;
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Program.cs
+using Data;
+using Data.DbContexts;
+using Data.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Serilog.Events;
+using Serilog;
+using System.Text;
+using Domain.Mapper;
+using Domain.IServices;
+using Domain.Services;
+using Microsoft.OpenApi.Models;
+
+namespace MediConnect_Plus
+{
+    public class Program
+    {
+
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+
+            builder.Services.AddControllers();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IMailService, MailService>();
+            builder.Services.AddScoped<IJWTTokenServices, JWTTokentService>();
+            builder.Services.AddScoped<IPersonService, PersonService>();
+            builder.Services.AddScoped<IPatientService, PatientService>();
+            builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddSerilog();
+            });
+            Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.File("logs/myapp-.txt")
+            .CreateLogger();
+
+            
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTToken:Key"]))
+                };
+            });
+            builder.Services.AddAuthorization();
+
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+
+                // Add JWT Bearer token authorization
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Enter 'Bearer [your_token]'",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                };
+                c.AddSecurityDefinition("Bearer", securityScheme);
+                var securityRequirement = new OpenApiSecurityRequirement
+    {
+        { securityScheme, new[] { "Bearer" } }
+    };
+                c.AddSecurityRequirement(securityRequirement);
+            });
+            var app = builder.Build();
+
+
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+
+            app.MapControllers();
+
+            app.Run();
+        }
+    }
+}
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\ChatController.cs
+﻿using Microsoft.AspNetCore.Mvc;
+using Domain.IServices;
+using Domain.DTOs.Chats;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ChatController : ControllerBase
+{
+    private readonly IChatService _chatService;
+
+    public ChatController(IChatService chatService)
+    {
+        _chatService = chatService;
+    }
+
+    [HttpGet("GetChatsByUser/{username}")]
+    public async Task<ActionResult<IEnumerable<ChatForShowingFromTheOutsideDTO>>> GetChatsByUserUsername(string username)
+    {
+        var chats = await _chatService.GetChatsByUserUsername(username);
+        if (chats != null)
+            return Ok(chats);
+        return BadRequest("No chats found for the user.");
+    }
+
+    [HttpGet("GetChatsByUser/{username}/Browse/{ChatID}")]
+    public async Task<ActionResult<IEnumerable<ChatMessageDTO>>> BrowseMessage(int ChatID)
+    {
+        var message = await _chatService.BrowseChat(ChatID);
+        if (message != null)
+            return Ok(message);
+        return BadRequest("Message not found.");
+    }
+
+    [HttpPost("SendMessage")]
+    public async Task<ActionResult<ChatMessageDTO>> SendMessage(string senderUsername, string receiverUsername, [FromBody] CreateChatMessageDTO chatMessageDTO)
+    {
+        var message = await _chatService.SendMessage(senderUsername, receiverUsername, chatMessageDTO);
+        if (message != null)
+            return Ok(message);
+        return BadRequest("Failed to send message.");
+    }
+
+    [HttpDelete("DeleteMessage/{messageId}")]
+    public async Task<IActionResult> DeleteMessage(int messageId)
+    {
+        var result = await _chatService.DeleteMessage(messageId);
+        if (result)
+            return Ok("Message deleted successfully.");
+        return BadRequest("Failed to delete message.");
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\PatientController.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Allergy;
+using Domain.DTOs.Doctor;
+using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Patient;
+using Domain.DTOs.Vaccination;
+using Domain.IServices;
+using Microsoft.AspNetCore.Mvc;
+
+[Route("api/[controller]")]
+[ApiController]
+public class PatientController : ControllerBase
+{
+    private readonly IPatientService _patientService;
+
+    public PatientController(IPatientService patientService)
+    {
+        _patientService = patientService;
+    }
+
+
+
+    [HttpGet("BrowseDoctors")]
+    public async Task<ActionResult<IEnumerable<DoctorForInputDTO>>> BrowseDoctors(string location, string specialty, string name)
+    {
+        var doctors = await _patientService.BrowseDoctors(location, specialty, name);
+        if (doctors != null && doctors.Any())
+            return Ok(doctors);
+        return BadRequest("No doctors found");
+    }
+
+    [HttpPost("AddEmergencyContact")]
+    public async Task<IActionResult> AddEmergencyContact(string patientUsername, EmergencyContactInfoDTO emergencyContact)
+    {
+        var result = await _patientService.AddEmergencyContact(patientUsername, emergencyContact);
+        if (result)
+            return Ok("Emergency contact added successfully");
+        return BadRequest("Failed to add emergency contact");
+    }
+
+    [HttpPost("RequestAppointment")]
+    public async Task<IActionResult> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+    {
+        var result = await _patientService.RequestAppointment(patientUsername, doctorUsername, appointmentDate);
+        if (result)
+            return Ok("Appointment requested successfully");
+        return BadRequest("Failed to request appointment");
+    }
+
+    [HttpPost("RequestSecondOpinion")]
+    public async Task<ActionResult<DoctorForOutputDTO>> RequestSecondOpinion(string patientUsername, string doctorUsername, string caseDescription)
+    {
+        var doctor = await _patientService.RequestSecondOpinion(patientUsername, doctorUsername, caseDescription);
+        if (doctor != null)
+            return Ok(doctor);
+        return BadRequest("Failed to request second opinion");
+    }
+
+    [HttpGet("ViewPastAppointments")]
+    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> ViewPastAppointments(string patientUsername)
+    {
+        var appointments = await _patientService.ViewPastAppointments(patientUsername);
+        if (appointments != null && appointments.Any())
+            return Ok(appointments);
+        return BadRequest("No past appointments found");
+    }
+
+    [HttpGet("ViewUpcomingAppointments")]
+    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> ViewUpcomingAppointments(string patientUsername)
+    {
+        var appointments = await _patientService.ViewUpcomingAppointments(patientUsername);
+        if (appointments != null && appointments.Any())
+            return Ok(appointments);
+        return BadRequest("No upcoming appointments found");
+    }
+
+    [HttpPost("AddAllergy")]
+    public async Task<ActionResult<AllergyForOutputDTO>> AddAllergy(string patientUsername, AllergyDTO allergy)
+    {
+        var result = await _patientService.AddAllergy(patientUsername, allergy);
+        if (result != null)
+            return Ok(result);
+        return BadRequest("Failed to add allergy");
+    }
+
+    [HttpDelete("DeleteAllergy/{allergyId}")]
+    public async Task<IActionResult> DeleteAllergy(int allergyId)
+    {
+        var result = await _patientService.DeleteAllergy(allergyId);
+        if (result)
+            return Ok("Allergy deleted successfully");
+        return BadRequest("Failed to delete allergy");
+    }
+
+    [HttpPut("UpdateAllergy/{allergyId}")]
+    public async Task<ActionResult<AllergyForOutputDTO>> UpdateAllergy(int allergyId, AllergyDTO updatedAllergy)
+    {
+        var allergy = await _patientService.UpdateAllergy(allergyId, updatedAllergy);
+        if (allergy != null)
+            return Ok(allergy);
+        return BadRequest("Failed to update allergy");
+    }
+
+    [HttpGet("BrowseAllergies")]
+    public async Task<ActionResult<IEnumerable<AllergyForOutputDTO>>> BrowseAllergies(string patientUsername)
+    {
+        var allergies = await _patientService.BrowseAllargies(patientUsername);
+        if (allergies != null && allergies.Any())
+            return Ok(allergies);
+        return BadRequest("No allergies found");
+    }
+
+    [HttpGet("BrowseVaccinations")]
+    public async Task<ActionResult<IEnumerable<VaccinationForOutputDTO>>> BrowseVaccinations(string patientUsername)
+    {
+        var vaccinations = await _patientService.BrowseVaccination(patientUsername);
+        if (vaccinations != null && vaccinations.Any())
+            return Ok(vaccinations);
+        return BadRequest("No vaccinations found");
+    }
+    [HttpGet("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> GetLifeStyleFactors(string patientUsername)
+    {
+        var LifestyleFactors = await _patientService.GetLifeStyleFactors(patientUsername);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
+
+    }
+    [HttpPost("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> AddLifeStyleFactors(string patientUsername,LifestyleFactorsDTO lifeFactors)
+    {
+        var LifestyleFactors = await _patientService.AddLifeStyleFactors(patientUsername, lifeFactors);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
+
+    }
+    [HttpPut("BrowseLifeStyleFactors")]
+    public async Task<ActionResult<LifestyleFactorsDTO>> UpdateLifeStyleFactors(string patientUsername, LifestyleFactorsForUpdatingDTO lifeFactors)
+    {
+        var LifestyleFactors = await _patientService.UpdateLifeStyleFactors(patientUsername, lifeFactors);
+        if (LifestyleFactors != null)
+            return Ok(LifestyleFactors);
+        return BadRequest("No Patient found");
+    }
+    [HttpPost("AddVaccination")]
+    public async Task<ActionResult<VaccinationForOutputDTO>> AddVaccination(string patientUsername, VaccinationDTO vaccination)
+    {
+        var result = await _patientService.AddVaccination(patientUsername, vaccination);
+        if (result != null)
+            return Ok(result);
+        return BadRequest("Failed to add vaccination");
+    }
+
+    [HttpDelete("DeleteVaccination/{vaccinationId}")]
+    public async Task<IActionResult> DeleteVaccination(int vaccinationId)
+    {
+        var result = await _patientService.DeleteVaccination(vaccinationId);
+        if (result)
+            return Ok("Vaccination deleted successfully");
+        return BadRequest("Failed to delete vaccination");
+    }
+
+    [HttpPut("UpdateVaccination/{vaccinationId}")]
+    public async Task<ActionResult<VaccinationForOutputDTO>> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination)
+    {
+        var vaccination = await _patientService.UpdateVaccination(vaccinationId, updatedVaccination);
+        if (vaccination != null)
+            return Ok(vaccination);
+        return BadRequest("Failed to update vaccination");
+    }
+
+    [HttpGet("ViewFullDetailsPatient")]
+    public async Task<ActionResult<PatientFullDTO>> ViewFullDetailsPatient(string patientUsername)
+    {
+        var patientDetails = await _patientService.ViewFullDetailsPatient(patientUsername);
+        if (patientDetails != null)
+            return Ok(patientDetails);
+        return BadRequest("Patient details not found");
+    }
+}
+
+
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\PersonController.cs
+﻿using Domain.DTOs.Person;
+using Domain.IServices;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Domain.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    //[Authorize]
+    public class PersonController : ControllerBase
+    {
+        private readonly IPersonService _personService;
+        private readonly ILogger _logger;
+
+        public PersonController(IPersonService personService, ILogger<PersonController> logger)
+        {
+            _personService = personService;
+            _logger = logger;
+        }
+        [HttpPost("EditPersonType/{Username}")]
+        public async Task<ActionResult> editPersonType(string Username,personTypeDTO type)
+        {
+            try
+            {
+                var updatedInfo = await _personService.editPersonType(Username,type);
+                if (updatedInfo != null)
+                    return Ok(updatedInfo);
+                else
+                    return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating person information");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPut("updateinfo")]
+        public async Task<IActionResult> UpdateInfo(InfoUpdateDTO infoUpdate)
+        {
+            try
+            {
+                var updatedInfo = await _personService.UpdateInfo(infoUpdate);
+                if (updatedInfo != null)
+                    return Ok(updatedInfo);
+                else
+                    return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating person information");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPut("edit-height-weight")]
+        public async Task<IActionResult> EditHeightAndWeight(HeightAndWeightDTO infoUpdate)
+        {
+            try
+            {
+                var updatedInfo = await _personService.EditHightAndWeight(infoUpdate);
+                if (updatedInfo != null)
+                    return Ok(updatedInfo);
+                else
+                    return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing height and weight");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPut("edit-occupation")]
+        public async Task<IActionResult> EditOccupation(newOccupationDTO newOccupation)
+        {
+            try
+            {
+                var updatedInfo = await _personService.EditOccupation(newOccupation);
+                if (updatedInfo != null)
+                    return Ok(updatedInfo);
+                else
+                    return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error editing occupation");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\UsersController.cs
+﻿using Microsoft.AspNetCore.Mvc;
+using Domain.DTOs.Login;
+using Domain.IServices;
+using Domain.DTOs;
+
+[ApiController]
+[Route("[controller]")]
+public class UserController : ControllerBase
+{
+    private readonly ILogger<UserController> _logger;
+    private readonly IUserService _userService;
+
+    public UserController(ILogger<UserController> logger, IUserService userService)
+    {
+        _logger = logger;
+        _userService = userService;
+    }
+
+    [HttpPost("register")]
+    public async Task<ActionResult<UserDTO>> Register(RegisterModelDTO model)
+    {
+        try
+        {
+            var registered = await _userService.Register(model);
+            if (registered != null )
+                return Ok(registered);
+            else
+                return BadRequest("Credentials already used.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to register user: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<JWTTokensDTO>> Login(LoginDTO model)
+    {
+        try
+        {
+            var result = await _userService.Login(model);
+            if (result != null)
+                return Ok(result);
+            else
+                return Unauthorized();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to authenticate user: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("recover-password-request")]
+    public async Task<IActionResult> RecoverPasswordRequest(RecoverPasswordRequestDTO model)
+    {
+        try
+        {
+            var success = await _userService.RecovePasswordRequest(model);
+            if (success)
+                return Ok("Recovery email sent successfully.");
+            else
+                return BadRequest("Failed to send recovery email.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to send recovery email: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDTO model)
+    {
+        try
+        {
+            var success = await _userService.ResetPassword(model);
+            if (success)
+                return Ok("Password reset successfully.");
+            else
+                return BadRequest("Failed to reset password.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to reset password: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("authenticate-email")]
+    public async Task<IActionResult> AuthenticateEmail(AuthinticateEmailDTO model)
+    {
+        try
+        {
+            var success = await _userService.AuthinticateEmail(model);
+            if (success)
+                return Ok("Email authenticated successfully.");
+            else
+                return BadRequest("Failed to authenticate email.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to authenticate email: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
+
+

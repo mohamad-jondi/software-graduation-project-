@@ -19,7 +19,7 @@ namespace Data.DbContexts
         public virtual DbSet<Doctor> Doctors{ get; set; }
         public virtual DbSet<EmergencyContactInfo> EmergencyContactInfos { get; set; }
         public virtual DbSet<LifestyleFactors> LifestyleFactors { get; set; }
-        public virtual DbSet<Operation> Operations { get; set; }
+        public virtual DbSet<Surgery> Operations { get; set; }
         public virtual DbSet<Patient> Patients { get; set; }
         public virtual DbSet<Person> Persons { get; set; }
         public virtual DbSet<User> Users{ get; set; }

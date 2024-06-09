@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Data.Models;
+using Data.Models.Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Cases;
@@ -9,6 +10,7 @@ using Domain.DTOs.Login;
 using Domain.DTOs.Patient;
 using Domain.DTOs.Person;
 using Domain.DTOs.Vaccination;
+using System.Reflection.Metadata;
 
 namespace Domain.Mapper
 {
@@ -37,7 +39,14 @@ namespace Domain.Mapper
             CreateMap<Allergy, VaccinationDTO>().ReverseMap();
             CreateMap<ChatMessage, ChatMessageDTO>().ReverseMap();
             CreateMap<ChatMessage, CreateChatMessageDTO>().ReverseMap();
-            
+            // Added mappings for cases, tests, surgeries, documents, etc.
+            CreateMap<Test, TestDTO>().ReverseMap();
+            CreateMap<Surgery, SurgeryDTO>().ReverseMap();
+            CreateMap<Document, DocumentDTO>().ReverseMap();
+            CreateMap<MedicalSecondOpinion, MedicalSecondOpinionDTO>().ReverseMap();
+            CreateMap<TreatmentPlan, TreatmentPlanDTO>().ReverseMap();
+            CreateMap<Drug, DrugDTO>().ReverseMap();
+
 
 
         }
