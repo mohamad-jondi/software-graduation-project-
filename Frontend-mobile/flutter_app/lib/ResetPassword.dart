@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/VerificationPage.dart';
 
 class ResetPassword extends StatefulWidget {
   @override
@@ -83,7 +84,10 @@ class _ResetPasswordPageState extends State<ResetPassword> {
     return ElevatedButton(
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          // Reset password logic
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => VerificationPage()),
+          );
         }
       },
       style: ElevatedButton.styleFrom(
@@ -103,10 +107,4 @@ class _ResetPasswordPageState extends State<ResetPassword> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: ResetPassword(),
-  ));
 }

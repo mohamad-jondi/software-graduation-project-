@@ -151,11 +151,11 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('assets/user.jpg'),
+                    backgroundImage: AssetImage('images/doctorimage.png'),
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Doctor Name',
+                    'Ahmad Amira',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,

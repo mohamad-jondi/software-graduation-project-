@@ -60,11 +60,11 @@ class _PatientHomePageState extends State<PatientHomePage> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('assets/user.jpg'),
+                    backgroundImage: AssetImage('images/doctorimage.png'),
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Patient Name',
+                    'Ahmad Amira',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,

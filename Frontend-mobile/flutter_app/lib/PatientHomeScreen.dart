@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/DoctorDetailPage.dart';
 
 class PatientHomeScreen extends StatelessWidget {
   @override
@@ -47,14 +48,24 @@ class PatientHomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            _buildRecommendedDoctor(),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DoctorDetailPage(),
+                  ),
+                );
+              },
+              child: _buildRecommendedDoctor(),
+            ),
             SizedBox(height: 20),
             Text(
               'Your Recent Doctors',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            _buildRecentDoctors(),
+            _buildRecentDoctors(context),
           ],
         ),
       ),
@@ -127,18 +138,54 @@ class PatientHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentDoctors() {
+  Widget _buildRecentDoctors(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildRecentDoctorItem('Dr. Marcus',
-            'images/doctorimage.png'), // Use doctorimage.png for all doctors
-        _buildRecentDoctorItem('Dr. Maria',
-            'images/doctorimage.png'), // Use doctorimage.png for all doctors
-        _buildRecentDoctorItem('Dr. Stevi',
-            'images/doctorimage.png'), // Use doctorimage.png for all doctors
-        _buildRecentDoctorItem('Dr. Luke',
-            'images/doctorimage.png'), // Use doctorimage.png for all doctors
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DoctorDetailPage(),
+              ),
+            );
+          },
+          child: _buildRecentDoctorItem('Dr. Marcus', 'images/doctorimage.png'),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DoctorDetailPage(),
+              ),
+            );
+          },
+          child: _buildRecentDoctorItem('Dr. Maria', 'images/doctorimage.png'),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DoctorDetailPage(),
+              ),
+            );
+          },
+          child: _buildRecentDoctorItem('Dr. Stevi', 'images/doctorimage.png'),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DoctorDetailPage(),
+              ),
+            );
+          },
+          child: _buildRecentDoctorItem('Dr. Luke', 'images/doctorimage.png'),
+        ),
       ],
     );
   }
