@@ -80,6 +80,14 @@ class SignupAs extends StatelessWidget {
                       );
                     },
                   ),
+                  SizedBox(height: 20),
+                  _buildSignUpButton(
+                    icon: Icons.family_restroom, // Appropriate icon for mother
+                    text: 'Sign up as a Mother',
+                    onPressed: () {
+                      // Add the navigation for sign up as a mother
+                    },
+                  ),
                 ],
               ),
             ),
