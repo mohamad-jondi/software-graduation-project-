@@ -4,6 +4,7 @@ import 'package:flutter_app/ContactsPage.dart';
 import 'package:flutter_app/EditProfileDoctor.dart'; // Use the same edit profile page for simplicity
 import 'package:flutter_app/PatientAppointmentsPage.dart';
 import 'package:flutter_app/PatientHomeScreen.dart';
+import 'package:flutter_app/MedicalInformationPage.dart'; // Import the MedicalInformationPage
 
 class PatientHomePage extends StatefulWidget {
   @override
@@ -102,7 +103,17 @@ class _PatientHomePageState extends State<PatientHomePage> {
               leading: Icon(Icons.medical_services),
               title: Text('View Medical Information'),
               onTap: () {
-                // Navigate to view medical information
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MedicalInformationPage(
+                      bloodType: 'O+', // Example blood type
+                      allergies: ['Pollen', 'Dust', 'Peanuts'], // Example data
+                      medications: ['Aspirin', 'Metformin'], // Example data
+                      surgeries: ['Appendectomy'], // Example data
+                    ),
+                  ),
+                );
               },
             ),
             ListTile(
