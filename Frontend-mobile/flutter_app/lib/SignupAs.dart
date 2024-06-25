@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/DoctorHomePage.dart';
 import 'package:flutter_app/DoctorSignup.dart';
+import 'package:flutter_app/MotherHomePage.dart';
+import 'package:flutter_app/NurseHomePage.dart';
 import 'package:flutter_app/PatientHomePage.dart';
 
 class SignupAs extends StatelessWidget {
@@ -76,7 +78,20 @@ class SignupAs extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => DoctorSignup()),
+                        MaterialPageRoute(
+                            builder: (context) => NurseHomePage()),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  _buildSignUpButton(
+                    icon: Icons.family_restroom, // Appropriate icon for mother
+                    text: 'Sign up as a Mother',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MotherHomePage()),
                       );
                     },
                   ),
