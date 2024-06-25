@@ -2,7 +2,7 @@
 
 namespace Data.Models
 {
-    public class Case
+    public class Case : BaseEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CaseId { get; set; }
@@ -22,7 +22,7 @@ namespace Data.Models
         public Patient Patient { get; set; }
         public Doctor Doctor { get; set; }
         public Nurse Nurse { get; set; }
-
+        public ICollection<Symptoms> symptoms { get; set; }
         public ICollection<Test> Tests { get; set; }  
         public ICollection<Documents> RelatedDocuments { get; set; }
         public ICollection<Surgery> RelatedOperations { get; set; } 

@@ -26,13 +26,10 @@ namespace Data.DbContexts
         public virtual DbSet<Vaccination> Vaccinations { get; set; }
         public virtual DbSet<Appointment> Appointments { get; set; }
         public virtual DbSet<DoctorRating> DoctorRatings { get; set; }
-
-         public virtual DbSet<MedicalSecondOpinion> MedicalSecondOpinions{ get; set; }
-
+        public virtual DbSet<Symptoms> Symptoms { get; set; }
+        public virtual DbSet<MedicalSecondOpinion> MedicalSecondOpinions{ get; set; }
         public virtual DbSet<Nurse> Nurses { get; set; }
-
         public virtual DbSet<Case> Cases{ get; set; }
-
         public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
 
 

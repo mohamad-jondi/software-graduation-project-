@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Data.Models
 {
-    public class Documents
+    public class Documents : BaseEntity
     {
         public string Type { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -66,13 +66,10 @@ namespace Data.DbContexts
         public virtual DbSet<Vaccination> Vaccinations { get; set; }
         public virtual DbSet<Appointment> Appointments { get; set; }
         public virtual DbSet<DoctorRating> DoctorRatings { get; set; }
-
-         public virtual DbSet<MedicalSecondOpinion> MedicalSecondOpinions{ get; set; }
-
+        public virtual DbSet<Symptoms> Symptoms { get; set; }
+        public virtual DbSet<MedicalSecondOpinion> MedicalSecondOpinions{ get; set; }
         public virtual DbSet<Nurse> Nurses { get; set; }
-
         public virtual DbSet<Case> Cases{ get; set; }
-
         public virtual DbSet<JWTTokensRefresh> JWTTokensRefresh { get; set;  }
 
 
@@ -387,7 +384,7 @@ namespace Data.Models
 
 namespace Data.Models
 {
-    public class Case
+    public class Case : BaseEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CaseId { get; set; }
@@ -407,7 +404,7 @@ namespace Data.Models
         public Patient Patient { get; set; }
         public Doctor Doctor { get; set; }
         public Nurse Nurse { get; set; }
-
+        public ICollection<Symptoms> symptoms { get; set; }
         public ICollection<Test> Tests { get; set; }  
         public ICollection<Documents> RelatedDocuments { get; set; }
         public ICollection<Surgery> RelatedOperations { get; set; } 
@@ -803,6 +800,26 @@ namespace Data.Models
 }
 
 
+// File: C:\Users\moham\Desktop\software\Backend\Application\Models\Symptoms.cs
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Data.Models
+{
+    public class Symptoms : BaseEntity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int SymptomID { get; set; }
+        [Required]
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int Severity { get; set; } 
+        public TimeSpan Duration { get; set; } 
+        public DateTime WhenDidItStart { get; set; } 
+    }
+}
+
+
 // File: C:\Users\moham\Desktop\software\Backend\Application\Models\Test.cs
 ﻿using Data.enums;
 using System.ComponentModel.DataAnnotations;
@@ -1002,6 +1019,8 @@ namespace Domain.DTOs
         public string PatientName { get; set; }
         public string Status { get; set; }
         public string Description { get; set; }
+
+        public string Notes { get; set; }
     }
 
 }
@@ -1227,7 +1246,9 @@ namespace Domain.DTOs
 
 
 // File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Cases\CaseDTO.cs
-﻿namespace Domain.DTOs.Cases
+﻿using Domain.DTOs.Symptoms;
+
+namespace Domain.DTOs.Cases
 {
     public class CaseDTO
     {
@@ -1242,6 +1263,7 @@ namespace Domain.DTOs
         public string Notes { get; set; }
         public DateTime LastUpdated { get; set; }
         public DateTime? NextAppointmentDate { get; set; }
+        public ICollection<SymptomsDTO > Symptoms { get; set; }
         public ICollection<DocumentDTO> RelatedDocuments { get; set; }
         public ICollection<SurgeryDTO> RelatedSurgeries { get; set; }
         public ICollection<MedicalSecondOpinionDTO> SecondOpinionRequests { get; set; }
@@ -1580,6 +1602,20 @@ namespace Domain.DTOs.Person
 }
 
 
+// File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Symptoms\SymptomsDTO.cs
+﻿namespace Domain.DTOs.Symptoms
+{
+    public class SymptomsDTO
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int Severity { get; set; }
+        public TimeSpan Duration { get; set; }
+        public DateTime WhenDidItStart { get; set; }
+    }
+}
+
+
 // File: C:\Users\moham\Desktop\software\Backend\Domain\DTOs\Vaccination\VaccinationDTO.cs
 ﻿using Data.enums;
 
@@ -1627,6 +1663,22 @@ namespace Domain.DTOs.Vaccination
 }
 
 
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\ICaseService.cs
+﻿using Domain.DTOs.Cases;
+
+namespace Domain.IServices
+{
+    public interface ICaseService
+    {
+        Task<IEnumerable<CaseDTO>> GetCasesAsync(string doctorUsername);
+        Task<CaseDTO> GetCaseByIdAsync(int caseId);
+        Task<CaseDTO> AddCaseAsync(CaseDTO caseDTO);
+        Task<bool> UpdateCaseAsync(int caseId, CaseDTO caseDTO);
+        Task<bool> DeleteCaseAsync(int caseId);
+    }
+}
+
+
 // File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IChatService.cs
 ﻿using Domain.DTOs.Chats;
 
@@ -1652,39 +1704,40 @@ namespace Domain.IServices
 {
     public interface IDoctorService
     {
-        Task<IEnumerable<AppointmentDTO>> GetAccpetedAppointments(string doctorUsername);
+        Task<IEnumerable<AppointmentDTO>> GetAcceptedAppointments(string doctorUsername);
         Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername);
         Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO);
         Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername);
-        Task<bool> DeleteDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
-        Task<AvaliabilityDTO> AddDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
+        Task<bool> DeleteDoctorAvailability(int availabilityId);
+        Task<AvaliabilityDTO> AddDoctorAvailability(string doctorUsername, AvaliabilityDTO availabilityDTO);
         Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);
         Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTO);
-
-        Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorsername);
+        Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorUsername);
         Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername);
         Task<PatientFullDTO> ViewPatientHistory(string patientUsername);
         Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername);
-        Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
-        Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
-        Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO DoctorCredential);
+        Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential);
+        Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential);
+        Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO doctorCredential);
         Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO);
 
-        // Added methods for managing cases and tests
+        // Methods for managing cases
         Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername);
-        Task<bool> ManageCase(int caseId, CaseDTO caseDTO);
+        Task<bool> UpdateCaseInformation(int caseId, CaseDTO caseDTO);
+
+        // Methods for managing tests
         Task<IEnumerable<TestDTO>> GetTests(string doctorUsername);
         Task<TestDTO> AddTest(string doctorUsername, TestDTO testDTO);
         Task<bool> UpdateTestStatus(int testId, TestStatus status);
         Task<bool> DeleteTest(int testId);
 
-        // Added methods for managing surgeries
+        // Methods for managing surgeries
         Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername);
         Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO);
         Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO);
         Task<bool> CancelSurgery(int surgeryId);
 
-        // Added methods for managing documents
+        // Methods for managing documents
         Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername);
         Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO);
         Task<bool> DeleteDocument(int documentId);
@@ -1727,6 +1780,21 @@ namespace Domain.IServices
         //Task<bool> RecordMedicationConsumption(int medicationId, DateTime consumptionTime);
         //Task<bool> SetAlarmReminder(int medicationId, ReminderDTO reminder);
     }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\IServices\IMotherService.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Vaccination;
+
+public interface IMotherService
+{
+    Task<ChildDTO> AddChildAsync(string motherUsername, ChildDTO childDTO);
+    Task<bool> ManageChildVaccinationAsync(int childId, VaccinationDTO vaccinationDTO);
+    Task<bool> ManageChildAppointmentAsync(int childId, AppointmentDTO appointmentDTO);
+    Task<IEnumerable<ChildDTO>> GetChildrenAsync(string motherUsername);
+    Task<bool> SnoozeDoctorAppointmentsAsync(string doctorUsername, int minutes);
+    Task<bool> MoveAppointmentAsync(int appointmentId, int minutes);
 }
 
 
@@ -1865,6 +1933,84 @@ using System.Reflection;
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0")]
 
 
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\CaseService.cs
+﻿using AutoMapper;
+using Data.Interfaces;
+using Data.Models;
+using Domain.DTOs.Cases;
+using Domain.IServices;
+using Microsoft.EntityFrameworkCore;
+
+
+public class CaseService : ICaseService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public CaseService(IUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+
+    public async Task<IEnumerable<CaseDTO>> GetCasesAsync(string doctorUsername)
+    {
+        var cases = await _unitOfWork.GetRepositories<Case>()
+            .Get()
+            .Include(c => c.Doctor)
+            .Where(c => c.Doctor.Username == doctorUsername)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<CaseDTO>>(cases);
+    }
+
+    public async Task<CaseDTO> GetCaseByIdAsync(int caseId)
+    {
+        var caseEntity = await _unitOfWork.GetRepositories<Case>()
+            .Get()
+            .Include(c => c.Doctor)
+            .FirstOrDefaultAsync(c => c.CaseId == caseId);
+
+        if (caseEntity == null)
+            return null;
+
+        return _mapper.Map<CaseDTO>(caseEntity);
+    }
+
+    public async Task<CaseDTO> AddCaseAsync(CaseDTO caseDTO)
+    {
+        var caseEntity = _mapper.Map<Case>(caseDTO);
+        var addedCase = await _unitOfWork.GetRepositories<Case>().Add(caseEntity);
+
+        return _mapper.Map<CaseDTO>(addedCase);
+    }
+
+    public async Task<bool> UpdateCaseAsync(int caseId, CaseDTO caseDTO)
+    {
+        var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseEntity == null)
+            return false;
+
+        caseEntity.Diagnosis = caseDTO.Diagnosis;
+        caseEntity.TreatmentPlan = caseDTO.TreatmentPlan;
+        await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+
+        return true;
+    }
+
+    public async Task<bool> DeleteCaseAsync(int caseId)
+    {
+        var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseEntity == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Case>().Delete(caseEntity);
+
+        return true;
+    }
+}
+
+
 // File: C:\Users\moham\Desktop\software\Backend\Domain\Services\ChatService.cs
 ﻿using Domain.IServices;
 using Data.Interfaces;
@@ -1977,7 +2123,8 @@ namespace Domain.Services
 
 
 // File: C:\Users\moham\Desktop\software\Backend\Domain\Services\DoctorService.cs
-﻿using AutoMapper;
+﻿// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\DoctorService.cs
+using AutoMapper;
 using Data.enums;
 using Data.Interfaces;
 using Data.Models;
@@ -1986,436 +2133,391 @@ using Domain.DTOs.Cases;
 using Domain.DTOs.Patient;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
-namespace Domain.Services
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Threading.Tasks;
+
+public class DoctorService : IDoctorService
 {
-    public class DoctorService : IDoctorService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public DoctorService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public DoctorService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-        }
-
-        public async Task<IEnumerable<AppointmentDTO>> GetAccpetedAppointments(string doctorUsername)
-        {
-            var appointments = await _unitOfWork.GetRepositories<Appointment>()
-                .Get()
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)
-                .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Accepted)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
-        }
-
-        public async Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername)
-        {
-            var appointments = await _unitOfWork.GetRepositories<Appointment>()
-                .Get()
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)
-                .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Pending)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
-        }
-
-        public async Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO)
-        {
-            var appointment = await _unitOfWork.GetRepositories<Appointment>()
-                .Get()
-                .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
-
-            if (appointment == null) return false;
-
-            appointment.Status = appointmentDTO.Status;
-            appointment.Description = appointmentDTO.Description;
-            appointment.DoctorNotes = appointmentDT;
-
-            await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
-            return true;
-        }
-
-        public async Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername)
-        {
-            var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
-                .Get()
-                .Include(a => a.Doctor)
-                .Where(a => a.Doctor.Username == doctorUsername)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
-        }
-
-        public async Task<bool> DeleteDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
-        {
-            var availability = await _unitOfWork.GetRepositories<Avaliability>()
-                .Get()
-                .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
-
-            if (availability == null) return false;
-
-            await _unitOfWork.GetRepositories<Avaliability>().Delete(availability);
-            return true;
-        }
-
-        public async Task<AvaliabilityDTO> AddDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.Username == availabilityDTO.DoctorID.ToString());
-
-            if (doctor == null) return null;
-
-            var availability = _mapper.Map<Avaliability>(availabilityDTO);
-            availability.Doctor = doctor;
-
-            await _unitOfWork.GetRepositories<Avaliability>().Add(availability);
-            return _mapper.Map<AvaliabilityDTO>(availability);
-        }
-
-        public async Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
-        {
-            var availability = await _unitOfWork.GetRepositories<Avaliability>()
-                .Get()
-                .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
-
-            if (availability == null) return null;
-
-            availability.DayOfWeek = availabilityDTO.DayOfWeek;
-            availability.StartHour = availabilityDTO.StartHour;
-            availability.EndHour = availabilityDTO.EndHour;
-
-            await _unitOfWork.GetRepositories<Avaliability>().Update(availability);
-            return _mapper.Map<AvaliabilityDTO>(availability);
-        }
-
-        public async Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTOs)
-        {
-            var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
-                .Get()
-                .Where(a => a.AvalibailityID == availabilityId)
-                .ToListAsync();
-
-            foreach (var availability in availabilities)
-            {
-                var dto = availabilityDTOs.FirstOrDefault(a => a.DoctorID == availability.DoctorID);
-                if (dto != null)
-                {
-                    availability.DayOfWeek = dto.DayOfWeek;
-                    availability.StartHour = dto.StartHour;
-                    availability.EndHour = dto.EndHour;
-                }
-            }
-
-            await _unitOfWork.GetRepositories<Avaliability>().UpdateRange(availabilities);
-            return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
-        }
-
-        public async Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorsername)
-        {
-            // Implementation for getting upcoming appointment reminders
-            throw new NotImplementedException();
-        }
-
-        public async Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername)
-        {
-            // Implementation for requesting access to patient data
-            throw new NotImplementedException();
-        }
-
-        public async Task<PatientFullDTO> ViewPatientHistory(string patientUsername)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .Include(p => p.Allergies)
-                .Include(p => p.Vaccinations)
-                .Include(p => p.cases)
-                .FirstOrDefaultAsync(p => p.Username == patientUsername);
-
-            return _mapper.Map<PatientFullDTO>(patient);
-        }
-
-        public async Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .Include(p => p.RelatedDocuments)
-                .FirstOrDefaultAsync(p => p.Username == patientUsername);
-
-            return _mapper.Map<IEnumerable<DocumentDTO>>(patient?.RelatedDocuments);
-        }
-
-        public async Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .Include(d => d.credential)
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            if (doctor == null) return null;
-
-            var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialID);
-            if (credential == null) return null;
-
-            credential.CredentialType = doctorCredential.CredentialType;
-            credential.CredentialValue = doctorCredential.CredentialValue;
-
-            await _unitOfWork.GetRepositories<Credential>().Update(credential);
-            return _mapper.Map<CredentialDTO>(credential);
-        }
-
-        public async Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .Include(d => d.credential)
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            if (doctor == null) return false;
-
-            var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.);
-            if (credential == null) return false;
-
-            await _unitOfWork.GetRepositories<Credential>().Delete(credential);
-            return true;
-        }
-
-        public async Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .Include(d => d.credential)
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            if (doctor == null) return null;
-
-            var credential = _mapper.Map<Credential>(doctorCredential);
-            doctor.credential.Add(credential);
-
-            await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
-            return _mapper.Map<CredentialDTO>(credential);
-        }
-
-        public async Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            if (doctor == null) return false;
-
-            doctor.DoctorWorkType = specializationDTO;
-            await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
-            return true;
-        }
-
-        public async Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername)
-        {
-            var cases = await _unitOfWork.GetRepositories<Case>()
-                .Get()
-                .Include(c => c.Doctor)
-                .Include(c => c.Patient)
-                .Where(c => c.Doctor.Username == doctorUsername)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<CaseDTO>>(cases);
-        }
-
-        public async Task<bool> ManageCase(int caseId, CaseDTO caseDTO)
-        {
-            var caseEntity = await _unitOfWork.GetRepositories<Case>()
-                .Get()
-                .FirstOrDefaultAsync(c => c.CaseId == caseId);
-
-            if (caseEntity == null) return false;
-
-            caseEntity.Title = caseDTO.Title;
-            caseEntity.CaseDescription = caseDTO.CaseDescription;
-            caseEntity.Diagnosis = caseDTO.Diagnosis;
-            caseEntity.Notes = caseDTO.Notes;
-            caseEntity.LastUpdated = caseDTO.LastUpdated;
-            caseEntity.NextAppointmentDate = caseDTO.NextAppointmentDate;
-
-            await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
-            return true;
-        }
-
-        public async Task<IEnumerable<TestDTO>> GetTests(string doctorUsername)
-        {
-            var tests = await _unitOfWork.GetRepositories<Test>()
-                .Get()
-                .Include(t => t.Doctor)
-                .Include(t => t.Patient)
-                .Where(t => t.Doctor.Username == doctorUsername)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<TestDTO>>(tests);
-        }
-
-        public async Task<> AddTest(string doctorUsername, TestDTO testDTO)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .FirstOrDefaultAsync(p => p.PatientID == testDTO.PatientID);
-
-            if (doctor == null || patient == null) return null;
-
-            var test = _mapper.Map<Test>(testDTO);
-            test.Doctor = doctor;
-            test.Patient = patient;
-
-            await _unitOfWork.GetRepositories<Test>().Add(test);
-            return _mapper.Map<TestDTO>(test);
-        }
-
-        public async Task<bool> UpdateTestStatus(int testId, TestStatus status)
-        {
-            var test = await _unitOfWork.GetRepositories<Test>()
-                .Get()
-                .FirstOrDefaultAsync(t => t.TestID == testId);
-
-            if (test == null) return false;
-
-            test.Status = status;
-
-            await _unitOfWork.GetRepositories<Test>().Update(test);
-            return true;
-        }
-
-        public async Task<bool> DeleteTest(int testId)
-        {
-            var test = await _unitOfWork.GetRepositories<Test>()
-                .Get()
-                .FirstOrDefaultAsync(t => t.TestID == testId);
-
-            if (test == null) return false;
-
-            await _unitOfWork.GetRepositories<Test>().Delete(test);
-            return true;
-        }
-
-        public async Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername)
-        {
-            var surgeries = await _unitOfWork.GetRepositories<Surgery>()
-                .Get()
-                .Include(s => s.Doctor)
-                .Include(s => s.Patient)
-                .Where(s => s.Doctor.Username == doctorUsername)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<SurgeryDTO>>(surgeries);
-        }
-
-        public async Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .FirstOrDefaultAsync(p => p.PatientID == surgeryDTO.PatientId);
-
-            if (doctor == null || patient == null) return false;
-
-            var surgery = _mapper.Map<Surgery>(surgeryDTO);
-            surgery.Doctor = doctor;
-            surgery.Patient = patient;
-
-            await _unitOfWork.GetRepositories<Surgery>().Add(surgery);
-            return true;
-        }
-
-        public async Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO)
-        {
-            var surgery = await _unitOfWork.GetRepositories<Surgery>()
-                .Get()
-                .FirstOrDefaultAsync(s => s.OperationID == surgeryId);
-
-            if (surgery == null) return false;
-
-            surgery.OperationName = surgeryDTO.SurgeryName;
-            surgery.Description = surgeryDTO.Description;
-            surgery.SurgeryDate = surgeryDTO.SurgeryDate;
-            surgery.SurgeryStatus = surgeryDTO.Status;
-            surgery.SurgeryNotes = surgeryDTO.Notes;
-
-            await _unitOfWork.GetRepositories<Surgery>().Update(surgery);
-            return true;
-        }
-
-        public async Task<bool> CancelSurgery(int surgeryId)
-        {
-            var surgery = await _unitOfWork.GetRepositories<Surgery>()
-                .Get()
-                .FirstOrDefaultAsync(s => s.OperationID == surgeryId);
-
-            if (surgery == null) return false;
-
-            await _unitOfWork.GetRepositories<Surgery>().Delete(surgery);
-            return true;
-        }
-
-        public async Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .Include(d => d.RelatedDocumtents)
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            return _mapper.Map<IEnumerable<DocumentDTO>>(doctor?.RelatedDocumtents);
-        }
-
-        public async Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO)
-        {
-            var doctor = await _unitOfWork.GetRepositories<Doctor>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-            if (doctor == null) return null;
-
-            var document = _mapper.Map<Documents>(documentDTO);
-            document.User = doctor;
-
-            await _unitOfWork.GetRepositories<Documents>().Add(document);
-            return _mapper.Map<DocumentDTO>(document);
-        }
-
-        public async Task<bool> DeleteDocument(int documentId)
-        {
-            var document = await _unitOfWork.GetRepositories<Documents>()
-                .Get()
-                .FirstOrDefaultAsync(d => d.DocumentId == documentId);
-
-            if (document == null) return false;
-
-            await _unitOfWork.GetRepositories<Documents>().Delete(document);
-            return true;
-        }
-
-        Task<IEnumerable<CaseDTO>> IDoctorService.ViewCases(string doctorUsername)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ManageCase(int caseId, CaseDTO caseDTO)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<TestDTO> IDoctorService.AddTest(string doctorUsername, TestDTO testDTO)
-        {
-            throw new NotImplementedException();
-        }
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
+
+    public async Task<IEnumerable<AppointmentDTO>> GetAcceptedAppointments(string doctorUsername)
+    {
+        var appointments = await _unitOfWork.GetRepositories<Appointment>()
+            .Get()
+            .Include(a => a.Doctor)
+            .Include(a => a.Patient)
+            .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Accepted)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+    }
+
+    public async Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername)
+    {
+        var appointments = await _unitOfWork.GetRepositories<Appointment>()
+            .Get()
+            .Include(a => a.Doctor)
+            .Include(a => a.Patient)
+            .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Pending)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+    }
+
+    public async Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO)
+    {
+        var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+        if (appointment == null)
+            return false;
+
+        appointment.Status = Enum.Parse<AppointmentStatus>(appointmentDTO.Status);
+        appointment.DoctorNotes = appointmentDTO.Notes;
+        await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
+
+        return true;
+    }
+
+    public async Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername)
+    {
+        var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
+            .Get()
+            .Include(a => a.Doctor)
+            .Where(a => a.Doctor.Username == doctorUsername)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+    }
+
+    public async Task<bool> DeleteDoctorAvailability(int availabilityId)
+    {
+        var availability = await _unitOfWork.GetRepositories<Avaliability>().Get().FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+        if (availability == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Avaliability>().Delete(availability);
+        return true;
+    }
+
+    public async Task<AvaliabilityDTO> AddDoctorAvailability(string doctorUsername, AvaliabilityDTO availabilityDTO)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
+
+        var availability = _mapper.Map<Avaliability>(availabilityDTO);
+        availability.Doctor = doctor;
+        var addedAvailability = await _unitOfWork.GetRepositories<Avaliability>().Add(availability);
+
+        return _mapper.Map<AvaliabilityDTO>(addedAvailability);
+    }
+
+    public async Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
+    {
+        var availability = await _unitOfWork.GetRepositories<Avaliability>().Get().FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+        if (availability == null)
+            return null;
+
+        availability.DayOfWeek = availabilityDTO.DayOfWeek;
+        availability.StartHour = availabilityDTO.StartHour;
+        availability.EndHour = availabilityDTO.EndHour;
+        await _unitOfWork.GetRepositories<Avaliability>().Update(availability);
+
+        return _mapper.Map<AvaliabilityDTO>(availability);
+    }
+
+    public async Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTOs)
+    {
+        var availabilities = await _unitOfWork.GetRepositories<Avaliability>().Get().Where(a => a.AvalibailityID == availabilityId).ToListAsync();
+        if (availabilities == null)
+            return null;
+
+        foreach (var availabilityDTO in availabilityDTOs)
+        {
+            var availability = availabilities.FirstOrDefault(a => a.AvalibailityID == availabilityDTO.);
+            if (availability != null)
+            {
+                availability.DayOfWeek = availabilityDTO.DayOfWeek;
+                availability.StartHour = availabilityDTO.StartHour;
+                availability.EndHour = availabilityDTO.EndHour;
+            }
+        }
+        await _unitOfWork.GetRepositories<Avaliability>().UpdateRange(availabilities);
+
+        return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+    }
+
+    public async Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorUsername)
+    {
+        // Implement logic to get upcoming appointment reminders
+        return new AppointmentReminderDTO();
+    }
+
+    public async Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername)
+    {
+        // Implement logic to request access to patient data
+        return true;
+    }
+
+    public async Task<PatientFullDTO> ViewPatientHistory(string patientUsername)
+    {
+        var patient = await _unitOfWork.GetRepositories<Patient>()
+            .Get()
+            .Include(p => p.Allergies)
+            .Include(p => p.Vaccinations)
+            .Include(p => p.cases)
+            .Include(p => p.EmergancyContact)
+            .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+        if (patient == null)
+            return null;
+
+        return _mapper.Map<PatientFullDTO>(patient);
+    }
+
+    public async Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername)
+    {
+        var patient = await _unitOfWork.GetRepositories<Patient>()
+            .Get()
+            .Include(p => p.RelatedDocumtents)
+            .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+        if (patient == null)
+            return null;
+
+        return _mapper.Map<IEnumerable<DocumentDTO>>(patient.RelatedDocumtents);
+    }
+
+    public async Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
+
+        var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialID);
+        if (credential == null)
+            return null;
+
+        credential.Name = doctorCredential.Name;
+        credential.Issuer = doctorCredential.Issuer;
+        credential.DateOfIssue = doctorCredential.DateOfIssue;
+        credential.DateOfExpiry = doctorCredential.DateOfExpiry;
+
+        await _unitOfWork.GetRepositories<Credential>().Update(credential);
+
+        return _mapper.Map<CredentialDTO>(credential);
+    }
+
+    public async Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return false;
+
+        var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialID);
+        if (credential == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Credential>().Delete(credential);
+
+        return true;
+    }
+
+    public async Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
+
+        var credential = _mapper.Map<Credential>(doctorCredential);
+        doctor.credential.Add(credential);
+        await _unitOfWork.GetRepositories<Credential>().Add(credential);
+
+        return _mapper.Map<CredentialDTO>(credential);
+    }
+
+    public async Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return false;
+
+        doctor.Specialization = specializationDTO;
+        await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
+
+        return true;
+    }
+
+    // Cases Management
+    public async Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername)
+    {
+        var cases = await _unitOfWork.GetRepositories<Case>()
+            .Get()
+            .Include(c => c.Doctor)
+            .Where(c => c.Doctor.Username == doctorUsername)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<CaseDTO>>(cases);
+    }
+
+    public async Task<bool> UpdateCaseInformation(int caseId, CaseDTO caseDTO)
+    {
+        var caseInfo = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseInfo == null)
+            return false;
+
+        caseInfo.Diagnosis = caseDTO.Diagnosis;
+        caseInfo.TreatmentPlan = caseDTO.TreatmentPlan;
+        await _unitOfWork.GetRepositories<Case>().Update(caseInfo);
+
+        return true;
+    }
+
+    // Tests Management
+    public async Task<IEnumerable<TestDTO>> GetTests(string doctorUsername)
+    {
+        var tests = await _unitOfWork.GetRepositories<Test>()
+            .Get()
+            .Include(t => t.Doctor)
+            .Where(t => t.Doctor.Username == doctorUsername)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<TestDTO>>(tests);
+    }
+
+    public async Task<TestDTO> AddTest(string doctorUsername, TestDTO testDTO)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
+
+        var test = _mapper.Map<Test>(testDTO);
+        test.Doctor = doctor;
+        var addedTest = await _unitOfWork.GetRepositories<Test>().Add(test);
+
+        return _mapper.Map<TestDTO>(addedTest);
+    }
+
+    public async Task<bool> UpdateTestStatus(int testId, TestStatus status)
+    {
+        var test = await _unitOfWork.GetRepositories<Test>().Get().FirstOrDefaultAsync(t => t.TestId == testId);
+        if (test == null)
+            return false;
+
+        test.Status = status;
+        await _unitOfWork.GetRepositories<Test>().Update(test);
+
+        return true;
+    }
+
+    public async Task<bool> DeleteTest(int testId)
+    {
+        var test = await _unitOfWork.GetRepositories<Test>().Get().FirstOrDefaultAsync(t => t.TestId == testId);
+        if (test == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Test>().Delete(test);
+
+        return true;
+    }
+
+    // Surgeries Management
+    public async Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername)
+    {
+        var surgeries = await _unitOfWork.GetRepositories<Surgery>()
+            .Get()
+            .Include(s => s.Doctor)
+            .Where(s => s.Doctor.Username == doctorUsername)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<SurgeryDTO>>(surgeries);
+    }
+
+    public async Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return false;
+
+        var surgery = _mapper.Map<Surgery>(surgeryDTO);
+        surgery.Doctor = doctor;
+        await _unitOfWork.GetRepositories<Surgery>().Add(surgery);
+
+        return true;
+    }
+
+    public async Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO)
+    {
+        var surgery = await _unitOfWork.GetRepositories<Surgery>().Get().FirstOrDefaultAsync(s => s.SurgeryId == surgeryId);
+        if (surgery == null)
+            return false;
+
+        surgery.Date = surgeryDTO.Date;
+        surgery.Type = surgeryDTO.Type;
+        surgery.Notes = surgeryDTO.Notes;
+        await _unitOfWork.GetRepositories<Surgery>().Update(surgery);
+
+        return true;
+    }
+
+    public async Task<bool> CancelSurgery(int surgeryId)
+    {
+        var surgery = await _unitOfWork.GetRepositories<Surgery>().Get().FirstOrDefaultAsync(s => s.SurgeryId == surgeryId);
+        if (surgery == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Surgery>().Delete(surgery);
+
+        return true;
+    }
+
+    // Documents Management
+    public async Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>()
+            .Get()
+            .Include(d => d.RelatedDocuments)
+            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+
+        if (doctor == null)
+            return null;
+
+        return _mapper.Map<IEnumerable<DocumentDTO>>(doctor.RelatedDocuments);
+    }
+
+    public async Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO)
+    {
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
+
+        var document = _mapper.Map<Document>(documentDTO);
+        document.Doctor = doctor;
+        await _unitOfWork.GetRepositories<Document>().Add(document);
+
+        return _mapper.Map<DocumentDTO>(document);
+    }
+
+    public async Task<bool> DeleteDocument(int documentId)
+    {
+        var document = await _unitOfWork.GetRepositories<Document>().Get().FirstOrDefaultAsync(d => d.DocumentId == documentId);
+        if (document == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Document>().Delete(document);
+
+        return true;
+    }
+
+
 }
 
 
@@ -2530,6 +2632,76 @@ namespace Domain.Services
         }
     }
     }
+
+
+// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\MotherService.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Vaccination;
+
+public class MotherService : IMotherService
+{
+    private readonly IChildRepository _childRepository;
+    private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IVaccinationRepository _vaccinationRepository;
+    private readonly IDoctorRepository _doctorRepository;
+
+    public MotherService(
+        IChildRepository childRepository,
+        IAppointmentRepository appointmentRepository,
+        IVaccinationRepository vaccinationRepository,
+        IDoctorRepository doctorRepository)
+    {
+        _childRepository = childRepository;
+        _appointmentRepository = appointmentRepository;
+        _vaccinationRepository = vaccinationRepository;
+        _doctorRepository = doctorRepository;
+    }
+
+    public async Task<ChildDTO> AddChildAsync(string motherUsername, ChildDTO childDTO)
+    {
+        return await _childRepository.AddChildAsync(motherUsername, childDTO);
+    }
+
+    public async Task<bool> ManageChildVaccinationAsync(int childId, VaccinationDTO vaccinationDTO)
+    {
+        return await _vaccinationRepository.ManageVaccinationAsync(childId, vaccinationDTO);
+    }
+
+    public async Task<bool> ManageChildAppointmentAsync(int childId, AppointmentDTO appointmentDTO)
+    {
+        return await _appointmentRepository.ManageAppointmentAsync(childId, appointmentDTO);
+    }
+
+    public async Task<IEnumerable<ChildDTO>> GetChildrenAsync(string motherUsername)
+    {
+        return await _childRepository.GetChildrenAsync(motherUsername);
+    }
+
+    public async Task<bool> SnoozeDoctorAppointmentsAsync(string doctorUsername, int minutes)
+    {
+        var appointments = await _appointmentRepository.GetAppointmentsByDoctorAsync(doctorUsername);
+        if (appointments == null) return false;
+
+        foreach (var appointment in appointments)
+        {
+            appointment.StartTime = appointment.StartTime.AddMinutes(minutes);
+            appointment.EndTime = appointment.EndTime.AddMinutes(minutes);
+        }
+
+        return await _appointmentRepository.UpdateAppointmentsAsync(appointments);
+    }
+
+    public async Task<bool> MoveAppointmentAsync(int appointmentId, int minutes)
+    {
+        var appointment = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId);
+        if (appointment == null) return false;
+
+        appointment.StartTime = appointment.StartTime.AddMinutes(minutes);
+        appointment.EndTime = appointment.EndTime.AddMinutes(minutes);
+
+        return await _appointmentRepository.UpdateAppointmentAsync(appointment);
+    }
+}
 
 
 // File: C:\Users\moham\Desktop\software\Backend\Domain\Services\PatientService.cs
@@ -3141,6 +3313,7 @@ namespace MediConnect_Plus
             builder.Services.AddScoped<IJWTTokenServices, JWTTokentService>();
             builder.Services.AddScoped<IPersonService, PersonService>();
             builder.Services.AddScoped<IPatientService, PatientService>();
+            builder.Services.AddScoped<IDoctorService, DoctorService>();
             builder.Services.AddScoped<IChatService, ChatService>();
             builder.Services.AddLogging(loggingBuilder =>
             {
@@ -3222,6 +3395,71 @@ namespace MediConnect_Plus
     }
 }
 
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\CaseController.cs
+﻿using Domain.DTOs.Cases;
+using Domain.IServices;
+using Microsoft.AspNetCore.Mvc;
+
+
+
+[ApiController]
+[Route("api/[controller]")]
+public class CaseController : ControllerBase
+{
+    private readonly ICaseService _caseService;
+
+    public CaseController(ICaseService caseService)
+    {
+        _caseService = caseService;
+    }
+
+    [HttpGet("doctor/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<CaseDTO>>> GetCasesByDoctor(string doctorUsername)
+    {
+        var cases = await _caseService.GetCasesAsync(doctorUsername);
+        if (cases != null)
+            return Ok(cases);
+        return NotFound("No cases found for the specified doctor.");
+    }
+
+    [HttpGet("{caseId}")]
+    public async Task<ActionResult<CaseDTO>> GetCaseById(int caseId)
+    {
+        var caseDTO = await _caseService.GetCaseByIdAsync(caseId);
+        if (caseDTO != null)
+            return Ok(caseDTO);
+        return NotFound("Case not found.");
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<CaseDTO>> AddCase([FromBody] CaseDTO caseDTO)
+    {
+        var newCase = await _caseService.AddCaseAsync(caseDTO);
+        if (newCase != null)
+            return CreatedAtAction(nameof(GetCaseById), new { caseId = newCase.CaseId }, newCase);
+        return BadRequest("Failed to add the case.");
+    }
+
+    [HttpPut("{caseId}")]
+    public async Task<IActionResult> UpdateCase(int caseId, [FromBody] CaseDTO caseDTO)
+    {
+        var result = await _caseService.UpdateCaseAsync(caseId, caseDTO);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to update the case.");
+    }
+
+    [HttpDelete("{caseId}")]
+    public async Task<IActionResult> DeleteCase(int caseId)
+    {
+        var result = await _caseService.DeleteCaseAsync(caseId);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to delete the case.");
+    }
+}
+
+
 // File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\ChatController.cs
 ﻿using Microsoft.AspNetCore.Mvc;
 using Domain.IServices;
@@ -3272,6 +3510,312 @@ public class ChatController : ControllerBase
         if (result)
             return Ok("Message deleted successfully.");
         return BadRequest("Failed to delete message.");
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\DoctorController.cs
+﻿// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\DoctorController.cs
+using Domain.DTOs;
+using Domain.IServices;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Domain.DTOs.Cases;
+using Data.enums;
+using Domain.DTOs.Patient;
+
+[ApiController]
+[Route("api/[controller]")]
+public class DoctorController : ControllerBase
+{
+    private readonly IDoctorService _doctorService;
+
+    public DoctorController(IDoctorService doctorService)
+    {
+        _doctorService = doctorService;
+    }
+
+    [HttpGet("accepted-appointments/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAcceptedAppointments(string doctorUsername)
+    {
+        var appointments = await _doctorService.GetAcceptedAppointments(doctorUsername);
+        return Ok(appointments);
+    }
+
+    [HttpGet("pending-appointments/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetPendingAppointments(string doctorUsername)
+    {
+        var appointments = await _doctorService.GetPendingAppointments(doctorUsername);
+        return Ok(appointments);
+    }
+
+    [HttpPut("manage-appointment/{appointmentId}")]
+    public async Task<IActionResult> ManageAppointment(int appointmentId, [FromBody] AppointmentDTO appointmentDTO)
+    {
+        var result = await _doctorService.ManageAppointment(appointmentId, appointmentDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpGet("availability/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<AvailabilityDTO>>> GetDoctorAvailability(string doctorUsername)
+    {
+        var availabilities = await _doctorService.GetDoctorAvailability(doctorUsername);
+        return Ok(availabilities);
+    }
+
+    [HttpDelete("availability/{availabilityId}")]
+    public async Task<IActionResult> DeleteDoctorAvailability(int availabilityId, [FromBody] AvailabilityDTO availabilityDTO)
+    {
+        var result = await _doctorService.DeleteDoctorAvailabilityAsync(availabilityId, availabilityDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpPost("availability/{doctorUsername}")]
+    public async Task<ActionResult<AvailabilityDTO>> AddDoctorAvailability(string doctorUsername, [FromBody] AvailabilityDTO availabilityDTO)
+    {
+        var availability = await _doctorService.AddDoctorAvailabilityAsync(doctorUsername, availabilityDTO);
+        if (availability != null)
+            return Ok(availability);
+        return BadRequest();
+    }
+
+    [HttpPut("availability/{availabilityId}")]
+    public async Task<ActionResult<AvailabilityDTO>> UpdateDoctorAvailability(int availabilityId, [FromBody] AvailabilityDTO availabilityDTO)
+    {
+        var availability = await _doctorService.UpdateDoctorAvailabilityAsync(availabilityId, availabilityDTO);
+        if (availability != null)
+            return Ok(availability);
+        return BadRequest();
+    }
+
+    [HttpGet("patient-history/{patientUsername}")]
+    public async Task<ActionResult<PatientFullDTO>> ViewPatientHistory(string patientUsername)
+    {
+        var patientHistory = await _doctorService.ViewPatientHistoryAsync(patientUsername);
+        if (patientHistory != null)
+            return Ok(patientHistory);
+        return BadRequest();
+    }
+
+    [HttpGet("patient-documents/{patientUsername}")]
+    public async Task<ActionResult<IEnumerable<DocumentDTO>>> ViewPatientDocuments(string patientUsername)
+    {
+        var documents = await _doctorService.ViewPatientDocumentsAsync(patientUsername);
+        if (documents != null)
+            return Ok(documents);
+        return BadRequest();
+    }
+
+    [HttpPut("credential/{doctorUsername}")]
+    public async Task<ActionResult<CredentialDTO>> UpdateDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    {
+        var credential = await _doctorService.UpdateDoctorCredentialAsync(doctorUsername, doctorCredential);
+        if (credential != null)
+            return Ok(credential);
+        return BadRequest();
+    }
+
+    [HttpDelete("credential/{doctorUsername}")]
+    public async Task<IActionResult> DeleteDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    {
+        var result = await _doctorService.DeleteDoctorCredentialAsync(doctorUsername, doctorCredential);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpPost("credential/{doctorUsername}")]
+    public async Task<ActionResult<CredentialDTO>> AddDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    {
+        var credential = await _doctorService.AddDoctorCredentialAsync(doctorUsername, doctorCredential);
+        if (credential != null)
+            return Ok(credential);
+        return BadRequest();
+    }
+
+    [HttpPut("work-type/{doctorUsername}")]
+    public async Task<IActionResult> UpdateDoctorTypeOfWork(string doctorUsername, [FromBody] DoctorWorkType specializationDTO)
+    {
+        var result = await _doctorService.UpdateDoctorTypeOfWorkAsync(doctorUsername, specializationDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpGet("cases/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<CaseDTO>>> ViewCases(string doctorUsername)
+    {
+        var cases = await _doctorService.ViewCasesAsync(doctorUsername);
+        return Ok(cases);
+    }
+
+    [HttpPut("manage-case/{caseId}")]
+    public async Task<IActionResult> ManageCase(int caseId, [FromBody] CaseDTO caseDTO)
+    {
+        var result = await _doctorService.ManageCaseAsync(caseId, caseDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpGet("tests/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<TestDTO>>> GetTests(string doctorUsername)
+    {
+        var tests = await _doctorService.GetTestsAsync(doctorUsername);
+        return Ok(tests);
+    }
+
+    [HttpPost("test/{doctorUsername}")]
+    public async Task<ActionResult<TestDTO>> AddTest(string doctorUsername, [FromBody] TestDTO testDTO)
+    {
+        var test = await _doctorService.AddTestAsync(doctorUsername, testDTO);
+        if (test != null)
+            return Ok(test);
+        return BadRequest();
+    }
+
+    [HttpPut("test-status/{testId}")]
+    public async Task<IActionResult> UpdateTestStatus(int testId, [FromBody] TestStatus status)
+    {
+        var result = await _doctorService.UpdateTestStatusAsync(testId, status);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpDelete("test/{testId}")]
+    public async Task<IActionResult> DeleteTest(int testId)
+    {
+        var result = await _doctorService.DeleteTestAsync(testId);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpGet("surgeries/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<SurgeryDTO>>> ViewSurgeries(string doctorUsername)
+    {
+        var surgeries = await _doctorService.ViewSurgeriesAsync(doctorUsername);
+        return Ok(surgeries);
+    }
+
+    [HttpPost("surgery/{doctorUsername}")]
+    public async Task<IActionResult> ScheduleSurgery(string doctorUsername, [FromBody] SurgeryDTO surgeryDTO)
+    {
+        var result = await _doctorService.ScheduleSurgeryAsync(doctorUsername, surgeryDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpPut("surgery/{surgeryId}")]
+    public async Task<IActionResult> ManageSurgery(int surgeryId, [FromBody] SurgeryDTO surgeryDTO)
+    {
+        var result = await _doctorService.ManageSurgeryAsync(surgeryId, surgeryDTO);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+
+    [HttpDelete("surgery/{surgeryId}")]
+    public async Task<IActionResult> DeleteSurgery(int surgeryId)
+    {
+        var result = await _doctorService.DeleteSurgeryAsync(surgeryId);
+        if (result)
+            return Ok();
+        return BadRequest();
+    }
+    [HttpPut("snooze-appointments/{doctorUsername}")]
+    public async Task<IActionResult> SnoozeAppointments(string doctorUsername, [FromQuery] int minutes)
+    {
+        var result = await _doctorService.SnoozeDoctorAppointmentsAsync(doctorUsername, minutes);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to snooze appointments.");
+    }
+
+    [HttpPut("move-appointment/{appointmentId}")]
+    public async Task<IActionResult> MoveAppointment(int appointmentId, [FromQuery] int minutes)
+    {
+        var result = await _doctorService.MoveAppointmentAsync(appointmentId, minutes);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to move the appointment.");
+    }
+}
+
+
+// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\MotherController.cs
+﻿using Domain.DTOs;
+using Domain.DTOs.Vaccination;
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("api/[controller]")]
+public class MotherController : ControllerBase
+{
+    private readonly IMotherService _motherService;
+
+    public MotherController(IMotherService motherService)
+    {
+        _motherService = motherService;
+    }
+
+    [HttpPost("{motherUsername}/child")]
+    public async Task<ActionResult<ChildDTO>> AddChild(string motherUsername, [FromBody] ChildDTO childDTO)
+    {
+        var child = await _motherService.AddChildAsync(motherUsername, childDTO);
+        if (child != null)
+            return CreatedAtAction(nameof(AddChild), new { id = child.ChildId }, child);
+        return BadRequest("Failed to add the child.");
+    }
+
+    [HttpPut("child/{childId}/vaccination")]
+    public async Task<IActionResult> ManageChildVaccination(int childId, [FromBody] VaccinationDTO vaccinationDTO)
+    {
+        var result = await _motherService.ManageChildVaccinationAsync(childId, vaccinationDTO);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to manage the vaccination.");
+    }
+
+    [HttpPut("child/{childId}/appointment")]
+    public async Task<IActionResult> ManageChildAppointment(int childId, [FromBody] AppointmentDTO appointmentDTO)
+    {
+        var result = await _motherService.ManageChildAppointmentAsync(childId, appointmentDTO);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to manage the appointment.");
+    }
+
+    [HttpGet("{motherUsername}/children")]
+    public async Task<ActionResult<IEnumerable<ChildDTO>>> GetChildren(string motherUsername)
+    {
+        var children = await _motherService.GetChildrenAsync(motherUsername);
+        return Ok(children);
+    }
+
+    [HttpPut("snooze-doctor-appointments/{doctorUsername}")]
+    public async Task<IActionResult> SnoozeDoctorAppointments(string doctorUsername, [FromQuery] int minutes)
+    {
+        var result = await _motherService.SnoozeDoctorAppointmentsAsync(doctorUsername, minutes);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to snooze appointments.");
+    }
+
+    [HttpPut("move-appointment/{appointmentId}")]
+    public async Task<IActionResult> MoveAppointment(int appointmentId, [FromQuery] int minutes)
+    {
+        var result = await _motherService.MoveAppointmentAsync(appointmentId, minutes);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to move the appointment.");
     }
 }
 

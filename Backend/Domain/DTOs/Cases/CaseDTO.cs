@@ -1,4 +1,6 @@
-﻿namespace Domain.DTOs.Cases
+﻿using Domain.DTOs.Symptoms;
+
+namespace Domain.DTOs.Cases
 {
     public class CaseDTO
     {
@@ -13,6 +15,7 @@
         public string Notes { get; set; }
         public DateTime LastUpdated { get; set; }
         public DateTime? NextAppointmentDate { get; set; }
+        public ICollection<SymptomsDTO > Symptoms { get; set; }
         public ICollection<DocumentDTO> RelatedDocuments { get; set; }
         public ICollection<SurgeryDTO> RelatedSurgeries { get; set; }
         public ICollection<MedicalSecondOpinionDTO> SecondOpinionRequests { get; set; }
