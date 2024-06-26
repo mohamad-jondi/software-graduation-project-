@@ -7,6 +7,7 @@ import 'package:flutter_app/ManageAppointmentsPage.dart';
 import 'package:flutter_app/ConfirmedAppointmentsPage.dart';
 import 'package:flutter_app/NotificationPage.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_app/SetAvailabilityPage.dart'; // Import the new page
 
 class DoctorHomePage extends StatefulWidget {
   @override
@@ -186,6 +187,18 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                     builder: (context) => ManageAppointmentsPage(
                       pendingAppointments: pendingAppointments,
                     ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.schedule),
+              title: Text('Set Availability'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SetAvailabilityPage(),
                   ),
                 );
               },
