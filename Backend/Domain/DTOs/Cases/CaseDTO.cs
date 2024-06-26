@@ -1,4 +1,5 @@
-﻿using Domain.DTOs.Symptoms;
+﻿using Domain.DTOs.Appointment;
+using Domain.DTOs.Symptoms;
 
 namespace Domain.DTOs.Cases
 {
@@ -17,7 +18,6 @@ namespace Domain.DTOs.Cases
         public DateTime? NextAppointmentDate { get; set; }
         public ICollection<SymptomsDTO > Symptoms { get; set; }
         public ICollection<DocumentDTO> RelatedDocuments { get; set; }
-        public ICollection<SurgeryDTO> RelatedSurgeries { get; set; }
         public ICollection<MedicalSecondOpinionDTO> SecondOpinionRequests { get; set; }
         public ICollection<AppointmentDTO> Appointments { get; set; }
         public TreatmentPlanDTO TreatmentPlan { get; set; }

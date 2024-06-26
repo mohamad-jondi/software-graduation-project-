@@ -1,4 +1,5 @@
-﻿using Domain.DTOs;
+﻿using Domain.DTOs.Appointment;
+using Domain.DTOs.Child;
 using Domain.DTOs.Vaccination;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,27 +15,27 @@ public class MotherController : ControllerBase
     }
 
     [HttpPost("{motherUsername}/child")]
-    public async Task<ActionResult<ChildDTO>> AddChild(string motherUsername, [FromBody] ChildDTO childDTO)
+    public async Task<ActionResult<ChildDTO>> AddChild(string motherUsername, [FromBody] ChildForCreationDTO childDTO)
     {
         var child = await _motherService.AddChildAsync(motherUsername, childDTO);
         if (child != null)
-            return CreatedAtAction(nameof(AddChild), new { id = child.ChildId }, child);
+            return CreatedAtAction(nameof(AddChild), new { id = child.Id }, child);
         return BadRequest("Failed to add the child.");
     }
 
-    [HttpPut("child/{childId}/vaccination")]
-    public async Task<IActionResult> ManageChildVaccination(int childId, [FromBody] VaccinationDTO vaccinationDTO)
+    [HttpPut("vaccination")]
+    public async Task<ActionResult<bool>> ManageChildVaccination([FromBody] VaccinationForUpdatingDTO vaccinationDTO)
     {
-        var result = await _motherService.ManageChildVaccinationAsync(childId, vaccinationDTO);
+        var result = await _motherService.UpdateChildVaccinationAsync( vaccinationDTO);
         if (result)
             return Ok();
         return BadRequest("Failed to manage the vaccination.");
     }
 
     [HttpPut("child/{childId}/appointment")]
-    public async Task<IActionResult> ManageChildAppointment(int childId, [FromBody] AppointmentDTO appointmentDTO)
+    public async Task<IActionResult> ManageChildAppointment(int childId, [FromBody] AppointmentCanceltionDTO appointmentDTO)
     {
-        var result = await _motherService.ManageChildAppointmentAsync(childId, appointmentDTO);
+        var result = await _motherService.CancelChildAppointmentAsync(childId, appointmentDTO);
         if (result)
             return Ok();
         return BadRequest("Failed to manage the appointment.");
@@ -47,21 +48,4 @@ public class MotherController : ControllerBase
         return Ok(children);
     }
 
-    [HttpPut("snooze-doctor-appointments/{doctorUsername}")]
-    public async Task<IActionResult> SnoozeDoctorAppointments(string doctorUsername, [FromQuery] int minutes)
-    {
-        var result = await _motherService.SnoozeDoctorAppointmentsAsync(doctorUsername, minutes);
-        if (result)
-            return Ok();
-        return BadRequest("Failed to snooze appointments.");
-    }
-
-    [HttpPut("move-appointment/{appointmentId}")]
-    public async Task<IActionResult> MoveAppointment(int appointmentId, [FromQuery] int minutes)
-    {
-        var result = await _motherService.MoveAppointmentAsync(appointmentId, minutes);
-        if (result)
-            return Ok();
-        return BadRequest("Failed to move the appointment.");
-    }
 }

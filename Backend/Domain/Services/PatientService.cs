@@ -1,7 +1,6 @@
 ﻿using Data.Models.Data.Models;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.Patient;
-using Domain.DTOs;
 using Domain.IServices;
 using Data.Interfaces;
 using Data.Models;
@@ -11,6 +10,7 @@ using Data.enums;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Vaccination;
 using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Appointment;
 
 namespace Domain.Services
 {
@@ -204,78 +204,7 @@ namespace Domain.Services
 
             return allergyDTOs;
         }
-
-
-        public async Task<IEnumerable<VaccinationForOutputDTO>> BrowseVaccination(string PatientUsername)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .Include(p => p.Vaccinations)
-                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
-
-            if (patient == null)
-                return Enumerable.Empty<VaccinationForOutputDTO>(); 
-            var vaccinationDTOs = patient.Vaccinations.Select(vaccination => _mapper.Map<VaccinationForOutputDTO>(vaccination));
-
-            return vaccinationDTOs;
-        }
-
-
-        public async Task<VaccinationForOutputDTO> AddVaccination(string PatientUsername, VaccinationDTO vaccination)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
-
-            if (patient == null)
-                return null;
-
-
-            var newAllergy = _mapper.Map<Vaccination>(vaccination);
-            newAllergy.Patient = patient;
-
-            var x = await _unitOfWork.GetRepositories<Vaccination>().Add(newAllergy);
-
-            return _mapper.Map<VaccinationForOutputDTO>(x);
-        }
-
-
-        public async Task<bool> DeleteVaccination(int vaccinationId)
-        {
-            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(c=> c.VaccinationID ==vaccinationId).FirstOrDefaultAsync();
-            if (vaccination == null)
-                return false; 
-
-            await _unitOfWork.GetRepositories<Vaccination>().Delete(vaccination);
-            return true;
-        }
-        public async Task<VaccinationForOutputDTO> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination)
-        {
-            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v=> v.VaccinationID == vaccinationId).FirstOrDefaultAsync();
-            if (vaccination == null)
-                return null;
-
-            var vaccinationType = typeof(VaccinationForUpdatingDTO);
-            var vaccinationProperties = vaccinationType.GetProperties();
-
-            foreach (var property in vaccinationProperties)
-            {
-                var newValue = property.GetValue(updatedVaccination);
-                if (newValue != null)
-                {
-                    var vaccinationProperty = vaccination.GetType().GetProperty(property.Name);
-                    if (vaccinationProperty != null)
-                    {
-                        vaccinationProperty.SetValue(vaccination, newValue);
-                    }
-                }
-            }
-
-            var x= await _unitOfWork.GetRepositories<Vaccination>().Update(vaccination);
-
-            return _mapper.Map<VaccinationForOutputDTO>(x);
-        }
-
+  
         public async Task<PatientFullDTO> ViewFullDetailsPatient(string patientUsername)
         {
             var patient = await _unitOfWork.GetRepositories<Patient>()

@@ -12,7 +12,7 @@ namespace Data.Models
         public string MaritalStatus { get; set; }
         public string Occupation { get; set; }
         public PersonType PersonType { get; set; }
-        public ICollection<Callender> CallenderAppointments { get; set; }
+        public ICollection<Appointment> CallenderAppointments { get; set; }
 
         public ICollection<EmergencyContactInfo> EmergencyContactInfo { get; set; }
     }

@@ -1,5 +1,6 @@
 ﻿using Data.enums;
 using Domain.DTOs;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Patient;
 

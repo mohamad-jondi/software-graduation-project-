@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Domain.DTOs.Cases;
 using Data.enums;
 using Domain.DTOs.Patient;
+using Domain.DTOs.Appointment;
 
 [ApiController]
 [Route("api/[controller]")]

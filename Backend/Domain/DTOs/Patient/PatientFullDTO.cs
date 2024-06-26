@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Allergy;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.LifestyleFactors;
@@ -27,7 +28,6 @@ namespace Domain.DTOs.Patient
         public ICollection<AllergyDTO> Allergies { get; set; }
         public ICollection<VaccinationDTO> Vaccinations { get; set; }
         public ICollection<CaseDTO> Cases { get; set; }
-
         public ICollection<AppointmentDTO> appointments { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Data.enums;
+﻿using Domain.DTOs;
 using Domain.DTOs.Cases;
 using Domain.IServices;
 using Microsoft.AspNetCore.Mvc;
@@ -60,21 +60,29 @@ public class CaseController : ControllerBase
             return Ok();
         return BadRequest("Failed to delete the case.");
     }
-    [HttpPut("test-status/{testId}")]
-    public async Task<IActionResult> UpdateTestStatus(int testId, [FromBody] TestStatus status)
-    {
-        var result = await _caseService.UpdateTestStatus(testId, status);
-        if (result)
-            return Ok();
-        return BadRequest();
-    }
+    [HttpGet("case/{caseId}/documents")]
 
-    [HttpDelete("test/{testId}")]
-    public async Task<IActionResult> DeleteTest(int testId)
+    public async Task<ActionResult<IEnumerable<DocumentDTO>>> ViewDocuments(int CaseID)
     {
-        var result = await _caseService.DeleteTest(testId);
-        if (result)
-            return Ok();
+        var result = await _caseService.ViewDocuments(CaseID);
+        return Ok(result);
+    }
+    [HttpPost("case/{caseId}/documents")]
+
+    public async Task<ActionResult<IEnumerable<DocumentDTO>>> UploadDocuments(int CaseID, [FromBody] DocumentDTO document)
+    {
+        var result = await _caseService.UploadDocument(CaseID, document);
+        if (result != null) return Ok(result);
         return BadRequest();
+
+    }
+    [HttpDelete("documents/{documentid}")]
+
+    public async Task<ActionResult<IEnumerable<DocumentDTO>>> DeleteDocuments(int documentID)
+    {
+        var result = await _caseService.DeleteDocument(documentID);
+        if (result) return Ok();
+        return BadRequest();
+
     }
 }

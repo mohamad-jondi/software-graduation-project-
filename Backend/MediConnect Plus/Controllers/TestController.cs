@@ -23,10 +23,10 @@ namespace MediConnect_Plus.Controllers
             return Ok(tests);
         }
 
-        [HttpPost("test/{doctorUsername}")]
-        public async Task<ActionResult<TestDTO>> AddTest(string doctorUsername, [FromBody] TestDTO testDTO)
+        [HttpPost("test/{CaseID}")]
+        public async Task<ActionResult<TestDTO>> AddTest(int CaseID, [FromBody] TestDTO testDTO)
         {
-            var test = await _TestService.AddTest(doctorUsername, testDTO);
+            var test = await _TestService.AddTest(CaseID, testDTO);
             if (test != null)
                 return Ok(test);
             return BadRequest();

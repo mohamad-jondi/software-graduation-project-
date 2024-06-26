@@ -1,67 +1,123 @@
-﻿using Domain.DTOs;
+﻿using AutoMapper;
+using Data.Interfaces;
+using Data.Models;
+using Domain.DTOs.Appointment;
+using Domain.DTOs.Child;
 using Domain.DTOs.Vaccination;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 public class MotherService : IMotherService
 {
-    private readonly IChildRepository _childRepository;
-    private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IVaccinationRepository _vaccinationRepository;
-    private readonly IDoctorRepository _doctorRepository;
+    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public MotherService(
-        IChildRepository childRepository,
-        IAppointmentRepository appointmentRepository,
-        IVaccinationRepository vaccinationRepository,
-        IDoctorRepository doctorRepository)
+    public MotherService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _childRepository = childRepository;
-        _appointmentRepository = appointmentRepository;
-        _vaccinationRepository = vaccinationRepository;
-        _doctorRepository = doctorRepository;
+        _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<ChildDTO> AddChildAsync(string motherUsername, ChildDTO childDTO)
+    public async Task<ChildDTO> AddChildAsync(string motherUsername, ChildForCreationDTO childDTO)
     {
-        return await _childRepository.AddChildAsync(motherUsername, childDTO);
+        var child = _mapper.Map<Child>(childDTO);
+        var mother = await _unitOfWork.GetRepositories<Mother>().Get().Include(c=> c.childrens).FirstOrDefaultAsync(m => m.Username == motherUsername);
+        if (mother == null) return null;
+
+        child.Parent = mother;
+        var x=  await _unitOfWork.GetRepositories<Child>().Add(child);
+        mother.childrens.Add(x);
+        await _unitOfWork.GetRepositories<Mother>().Update(mother);
+        return _mapper.Map<ChildDTO>(x)  ;
     }
 
-    public async Task<bool> ManageChildVaccinationAsync(int childId, VaccinationDTO vaccinationDTO)
+    public async Task<bool> UpdateChildVaccinationAsync( VaccinationForUpdatingDTO vaccinationDTO)
     {
-        return await _vaccinationRepository.ManageVaccinationAsync(childId, vaccinationDTO);
+        var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v=> v.VaccinationID == vaccinationDTO.VaccinationID).FirstOrDefaultAsync();
+        if (vaccination == null) return false;
+        vaccination.Name = string.IsNullOrEmpty(vaccinationDTO.Name) ? vaccination.Name: vaccinationDTO.Name;
+        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
+        vaccination.VaccineStatus = vaccinationDTO.VaccineStatus == null ? vaccination.VaccineStatus : vaccinationDTO.VaccineStatus.Value;
+        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
+        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
+
+        return true;
     }
 
-    public async Task<bool> ManageChildAppointmentAsync(int childId, AppointmentDTO appointmentDTO)
+    public async Task<bool> CancelChildAppointmentAsync(int childId, AppointmentCanceltionDTO appointmentDTO)
     {
-        return await _appointmentRepository.ManageAppointmentAsync(childId, appointmentDTO);
+        var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().Where(v => v.AppointmentId == appointmentDTO.appointmentId).FirstOrDefaultAsync();
+        appointment.CanceledReson = appointmentDTO.CanceledReson;
+        appointment.CanceledBy = appointmentDTO.CanceledBy;
+        await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
+        return true;
     }
 
     public async Task<IEnumerable<ChildDTO>> GetChildrenAsync(string motherUsername)
     {
-        return await _childRepository.GetChildrenAsync(motherUsername);
+        var mother = await _unitOfWork.GetRepositories<Mother>().Get().Include(c=> c.childrens).FirstOrDefaultAsync(m => m.Username == motherUsername);
+        if (mother == null) return null;
+        return _mapper.Map<IEnumerable<ChildDTO>>(mother.childrens);
     }
 
-    public async Task<bool> SnoozeDoctorAppointmentsAsync(string doctorUsername, int minutes)
+    public async Task<ChildDTO> UpdateChildInfo(int ChildID, ChildDTO childDTO)
     {
-        var appointments = await _appointmentRepository.GetAppointmentsByDoctorAsync(doctorUsername);
-        if (appointments == null) return false;
+        var child = await _unitOfWork.GetRepositories<Child>().Get().FirstOrDefaultAsync(c => c.Id == ChildID);
+        if (child == null) return null;
 
-        foreach (var appointment in appointments)
-        {
-            appointment.StartTime = appointment.StartTime.AddMinutes(minutes);
-            appointment.EndTime = appointment.EndTime.AddMinutes(minutes);
-        }
+        child.DateOfBirth = childDTO.DateOfBirth== null ? child.DateOfBirth :  childDTO.DateOfBirth;
+        child.LatestRecordedWeight = childDTO.LatestRecordedWeight ?? child.LatestRecordedWeight;
+        child.LatestRecordedHeight = childDTO.LatestRecordedHeight ?? child.LatestRecordedHeight;
+        child.Gender = childDTO.Gender == null?child.Gender : childDTO.Gender;
+        child.Name = string.IsNullOrEmpty(childDTO.Name) ? child.Name : childDTO.Name;
 
-        return await _appointmentRepository.UpdateAppointmentsAsync(appointments);
+        await _unitOfWork.GetRepositories<Child>().Update(child);
+        return _mapper.Map<ChildDTO>(child);
     }
 
-    public async Task<bool> MoveAppointmentAsync(int appointmentId, int minutes)
+    public async Task<ChildDTO> GetChildByID(int ChildId)
     {
-        var appointment = await _appointmentRepository.GetAppointmentByIdAsync(appointmentId);
-        if (appointment == null) return false;
-
-        appointment.StartTime = appointment.StartTime.AddMinutes(minutes);
-        appointment.EndTime = appointment.EndTime.AddMinutes(minutes);
-
-        return await _appointmentRepository.UpdateAppointmentAsync(appointment);
+        var child = await _unitOfWork.GetRepositories<Child>().Get().FirstOrDefaultAsync(c => c.Id == ChildId);
+        return _mapper.Map<ChildDTO>(child);
     }
+
+    public async Task<VaccinationDTO> AddChildVacination(int ChildID, VaccinationDTO vacine)
+    {
+        var child = await _unitOfWork.GetRepositories<Child>().Get().Include(c=> c.Vaccination).FirstOrDefaultAsync(c => c.Id == ChildID);
+        if (child == null)  return null;
+
+        child.Vaccination.Add(_mapper.Map<Vaccination>(vacine));
+        await _unitOfWork.GetRepositories<Child>().Update(child);
+        return _mapper.Map<VaccinationDTO>(vacine);
+    }
+
+    public async Task<bool> DeleteChildVacination(int vaccinationID)
+    {
+        var x= await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v => v.VaccinationID == vaccinationID).FirstOrDefaultAsync();
+        if (x== null )return false;
+        await _unitOfWork.GetRepositories<Vaccination>().Delete(x);
+        return true;
+        
+    }
+
+    public async Task<AppointmentDTO> BookAppointment(int ChildID, string DoctorUserName, AppointmentDTO appointment)
+    {
+        var app = _mapper.Map<Appointment>(appointment);
+        app.ChildID = ChildID;
+        var doctor =await _unitOfWork.GetRepositories<Doctor>().Get().Where(c => c.Username == DoctorUserName).FirstOrDefaultAsync();
+        app.Doctor = doctor;
+        return _mapper.Map<AppointmentDTO> (await _unitOfWork.GetRepositories<Appointment>().Add(app));
+
+    }
+    public async Task<IEnumerable<AppointmentDTO>> GetAppointments(string UserName)
+    {
+        var appointments = await _unitOfWork.GetRepositories<Appointment>()
+                                         .Get()
+                                         .Where(c => c.Patient.Username == UserName || c.Doctor.Username == UserName)
+                                         .ToListAsync();
+
+        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+    }
+
+
 }

@@ -57,7 +57,7 @@ public class CaseService : ICaseService
             return false;
 
         caseEntity.Diagnosis = caseDTO.Diagnosis;
-        caseEntity.TreatmentPlan = caseDTO.TreatmentPlan;
+        caseEntity.TreatmentPlan = _mapper.Map<TreatmentPlan>(caseDTO.TreatmentPlan);
         await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
 
         return true;
@@ -105,7 +105,7 @@ public class CaseService : ICaseService
         if (document == null)
             return false;
 
-        await _unitOfWork.GetRepositories<Document>().Delete(document);
+        await _unitOfWork.GetRepositories<Documents>().Delete(document);
 
         return true;
     }

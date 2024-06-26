@@ -3,6 +3,7 @@ using Data.Models;
 using Data.Models.Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Allergy;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Chats;
 using Domain.DTOs.Doctor;
@@ -41,7 +42,6 @@ namespace Domain.Mapper
             CreateMap<ChatMessage, CreateChatMessageDTO>().ReverseMap();
             // Added mappings for cases, tests, surgeries, documents, etc.
             CreateMap<Test, TestDTO>().ReverseMap();
-            CreateMap<Surgery, SurgeryDTO>().ReverseMap();
             CreateMap<Document, DocumentDTO>().ReverseMap();
             CreateMap<MedicalSecondOpinion, MedicalSecondOpinionDTO>().ReverseMap();
             CreateMap<TreatmentPlan, TreatmentPlanDTO>().ReverseMap();

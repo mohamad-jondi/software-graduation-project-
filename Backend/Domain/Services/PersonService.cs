@@ -58,9 +58,11 @@ namespace Domain.Services
                 existingUser.Id = 0;
                 if (personTypeDTO.PersonType == PersonType.Patient) await _context.GetRepositories<Patient>().Add(_mapper.Map<Patient>(existingUser));
                 if (personTypeDTO.PersonType == PersonType.Doctor) await _context.GetRepositories<Doctor>().Add(_mapper.Map<Doctor>(existingUser));
-                //if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Mother) await _context.GetRepositories<Mother>().Add(_mapper.Map<Mother>(existingUser));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return null;
             }

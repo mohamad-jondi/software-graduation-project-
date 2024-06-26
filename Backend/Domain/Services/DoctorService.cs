@@ -4,6 +4,7 @@ using Data.enums;
 using Data.Interfaces;
 using Data.Models;
 using Domain.DTOs;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Patient;
 using Domain.IServices;

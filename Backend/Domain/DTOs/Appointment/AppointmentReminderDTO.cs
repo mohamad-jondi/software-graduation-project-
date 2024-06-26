@@ -1,7 +1,7 @@
-﻿namespace Domain.DTOs
+﻿namespace Domain.DTOs.Appointment
 {
     public class AppointmentReminderDTO
     {
-    
+
     }
 }
