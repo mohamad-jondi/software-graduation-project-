@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_app/NotificationPage.dart';
-import 'package:flutter_app/ContactsPage.dart';
 
 class MotherHomePage extends StatefulWidget {
   @override
@@ -15,15 +13,15 @@ class _MotherHomePageState extends State<MotherHomePage> {
   final List<Map<String, dynamic>> children = [
     {
       "name": "Tom",
-      "image": 'images/child1.png', // Replace with your image asset
-      "vaccinations": ['Polio', 'MMR', 'Hepatitis B'], // Dummy data
-      "nextVaccine": DateTime.now().add(Duration(days: 30)), // Example date
+      "image": 'images/child1.png',
+      "vaccinations": ['Polio', 'MMR', 'Hepatitis B'],
+      "nextVaccine": DateTime.now().add(Duration(days: 30)),
     },
     {
       "name": "Jerry",
-      "image": 'images/child2.png', // Replace with your image asset
-      "vaccinations": ['Polio', 'MMR'], // Dummy data
-      "nextVaccine": DateTime.now().add(Duration(days: 60)), // Example date
+      "image": 'images/child2.png',
+      "vaccinations": ['Polio', 'MMR'],
+      "nextVaccine": DateTime.now().add(Duration(days: 60)),
     },
   ];
 
@@ -73,18 +71,115 @@ class _MotherHomePageState extends State<MotherHomePage> {
   }
 
   void _showAddChildDialog() {
+    final _formKey = GlobalKey<FormState>();
+    String name = '';
+    String gender = '';
+    double height = 0;
+    double weight = 0;
+    DateTime dob = DateTime.now();
+    TextEditingController dobController = TextEditingController();
+
+    Future<void> _selectDate(BuildContext context) async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: dob,
+        firstDate: DateTime(2000),
+        lastDate: DateTime.now(),
+      );
+      if (picked != null && picked != dob) {
+        setState(() {
+          dob = picked;
+          dobController.text = DateFormat('yyyy-MM-dd').format(dob);
+        });
+      }
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Add Child'),
-          content: TextField(
-            decoration: InputDecoration(
-              hintText: 'Enter child name',
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                    ),
+                    onChanged: (value) {
+                      name = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Gender',
+                    ),
+                    onChanged: (value) {
+                      gender = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a gender';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Height (cm)',
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      height = double.tryParse(value) ?? 0;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter height';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Weight (kg)',
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      weight = double.tryParse(value) ?? 0;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter weight';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: dobController,
+                    decoration: InputDecoration(
+                      labelText: 'Date of Birth',
+                    ),
+                    readOnly: true,
+                    onTap: () => _selectDate(context),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter date of birth';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
-            onChanged: (value) {
-              // Implement logic to handle the new child's name
-            },
           ),
           actions: [
             TextButton(
@@ -96,8 +191,17 @@ class _MotherHomePageState extends State<MotherHomePage> {
             TextButton(
               child: Text('Add'),
               onPressed: () {
-                // Implement add child logic here
-                Navigator.of(context).pop();
+                if (_formKey.currentState!.validate()) {
+                  setState(() {
+                    children.add({
+                      "name": name,
+                      "image": 'images/child_default.png',
+                      "vaccinations": [],
+                      "nextVaccine": dob,
+                    });
+                  });
+                  Navigator.of(context).pop();
+                }
               },
             ),
           ],
@@ -130,8 +234,7 @@ class _MotherHomePageState extends State<MotherHomePage> {
                     childName: child['name'],
                     nextVaccineDate:
                         DateFormat('yyyy-MM-dd').format(child['nextVaccine']),
-                    vaccinations:
-                        child['vaccinations'], // Replace with actual data
+                    vaccinations: child['vaccinations'],
                   ),
                 ),
               );
@@ -183,8 +286,7 @@ class _MotherHomePageState extends State<MotherHomePage> {
               borderRadius: BorderRadius.circular(12.0),
             ),
             padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
-            minimumSize:
-                Size(double.infinity, 50), // Make button fill the width
+            minimumSize: Size(double.infinity, 50),
           ),
           child: Text('Add Child', style: TextStyle(color: Colors.white)),
         ),
@@ -219,8 +321,7 @@ class _MotherHomePageState extends State<MotherHomePage> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage(
-                        'images/mother.png'), // Replace with your image asset
+                    backgroundImage: AssetImage('images/mother.png'),
                   ),
                   SizedBox(height: 10),
                   Text(
@@ -254,8 +355,8 @@ class _MotherHomePageState extends State<MotherHomePage> {
         controller: _pageController,
         children: [
           homeContent,
-          NotificationPage(),
-          Contactspage(),
+          // NotificationPage(),
+          // ContactsPage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -366,7 +467,7 @@ class ChildDetailsPage extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF199A8E), // Button background color
+              backgroundColor: Color(0xFF199A8E),
             ),
             onPressed: () {
               // Handle add action

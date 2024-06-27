@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/AddCredentialsPage.dart';
 import 'package:flutter_app/AdminHomePage.dart';
 import 'package:flutter_app/DoctorSignup.dart';
 import 'package:flutter_app/LoginAndSignup.dart';
+import 'package:flutter_app/MotherHomePage.dart';
 import 'Wellcome.dart';
 
 void main() {
@@ -29,7 +31,7 @@ class _WellcomeScreenState extends State<WellcomeScreen> {
     // Navigate to LoginPage after 5 seconds
     Future.delayed(Duration(seconds: 5), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LoginAndSignup()),
+        MaterialPageRoute(builder: (context) => MotherHomePage()),
       );
     });
   }
