@@ -7,6 +7,8 @@
         public string SecondPartyUsername { get; set; }
         public bool IsTheLastSenderMe { get; set; }
         public string lastSentMassagess { get; set; }
+
+        public DateTime LastMessageDate { get; set; }
         public int numberOfMessages { get; set; }
     }
 }

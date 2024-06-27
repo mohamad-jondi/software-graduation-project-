@@ -2,6 +2,7 @@
 using Domain.DTOs.Login;
 using Domain.IServices;
 using Domain.DTOs;
+using Domain.DTOs.Person;
 
 [ApiController]
 [Route("[controller]")]
@@ -15,6 +16,24 @@ public class UserController : ControllerBase
         _logger = logger;
         _userService = userService;
     }
+
+    [HttpGet("does-user-have-pic")]
+    public async Task<ActionResult<bool>> DoesUserGotPic(string username)
+    {
+        try
+        {
+            var registered = await _userService.DoesUserGotPic(username);
+            if (registered != null)
+                return Ok(registered);
+            return BadRequest();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to register user: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
 
     [HttpPost("register")]
     public async Task<ActionResult<UserDTO>> Register(RegisterModelDTO model)
@@ -35,7 +54,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<JWTTokensDTO>> Login(LoginDTO model)
+    public async Task<ActionResult<PersonDTO>> Login(LoginDTO model)
     {
         try
         {

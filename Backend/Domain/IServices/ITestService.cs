@@ -6,7 +6,7 @@ namespace Domain.IServices
 {
     public interface ITestService
     {
-        Task<IEnumerable<TestDTO>> GetTests(string doctorUsername);
+        Task<IEnumerable<TestDTO>> GetTests(int CaseID);
         Task<TestDTO> AddTest(int CaseID, TestDTO testDTO);
         Task<bool> UpdateTestStatus(int testId, TestStatus status);
         Task<bool> DeleteTest(int testId);

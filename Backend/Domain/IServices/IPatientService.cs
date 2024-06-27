@@ -9,7 +9,7 @@ namespace Domain.IServices
 {
     public interface IPatientService
     {
-        Task<IEnumerable<DoctorForInputDTO>> BrowseDoctors(string? location , string? specialty, string? name);
+        Task<IEnumerable<DoctorForBrowsingDTO>> BrowseDoctors(string? location , string? specialty, string? name);
         Task<bool> AddEmergencyContact(string PatientUsername, EmergencyContactInfoDTO emergencyContact);
         Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate);
         Task<DoctorForOutputDTO> RequestSecondOpinion(string PatientUsername, string DoctorUsername, string caseDescription);

@@ -1,5 +1,4 @@
-﻿// File: C:\Users\moham\Desktop\software\Backend\Domain\Services\DoctorService.cs
-using AutoMapper;
+﻿using AutoMapper;
 using Data.enums;
 using Data.Interfaces;
 using Data.Models;
@@ -9,10 +8,7 @@ using Domain.DTOs.Cases;
 using Domain.DTOs.Patient;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Threading.Tasks;
+using Domain.DTOs;
 
 public class DoctorService : IDoctorService
 {
@@ -25,7 +21,7 @@ public class DoctorService : IDoctorService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetAcceptedAppointments(string doctorUsername)
+    public async Task<IEnumerable<AppointmentForShowDTO>> GetAcceptedAppointments(string doctorUsername)
     {
         var appointments = await _unitOfWork.GetRepositories<Appointment>()
             .Get()
@@ -34,10 +30,10 @@ public class DoctorService : IDoctorService
             .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Accepted)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        return _mapper.Map<IEnumerable<AppointmentForShowDTO>>(appointments);
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername)
+    public async Task<IEnumerable<AppointmentForShowDTO>> GetPendingAppointments(string doctorUsername)
     {
         var appointments = await _unitOfWork.GetRepositories<Appointment>()
             .Get()
@@ -46,32 +42,62 @@ public class DoctorService : IDoctorService
             .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Pending)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        return _mapper.Map<IEnumerable<AppointmentForShowDTO>>(appointments);
     }
 
-    public async Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO)
+    public async Task<bool> ManageAppointment(AppointmentMangmentDTO appointmentDTO)
     {
-        var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+        var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().FirstOrDefaultAsync(a => a.AppointmentId == appointmentDTO.appointmentId);
         if (appointment == null)
             return false;
 
-        appointment.Status = Enum.Parse<AppointmentStatus>(appointmentDTO.Status);
-        appointment.DoctorNotes = appointmentDTO.Notes;
-        await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
+        appointment.Status = appointmentDTO.AppointmentStatus;
+        var x = await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
 
         return true;
     }
 
-    public async Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername)
+    public async Task<DoctorAvaliabilityWithAppointmentsDTO> GetDoctorAvailability(string doctorUsername)
     {
-        var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
+        var doctor = await _unitOfWork.GetRepositories<Doctor>()
             .Get()
-            .Include(a => a.Doctor)
-            .Where(a => a.Doctor.Username == doctorUsername)
-            .ToListAsync();
+            .Include(d => d.Avalible)
+            .Include(d => d.Appointment)
+            .ThenInclude(a => a.Patient) 
+            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
 
-        return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+        if (doctor == null)
+        {
+            return null; // or handle the case where the doctor is not found
+        }
+
+        var avaliabilityDTOs = doctor.Avalible.Select(avaliability => new AvaliabilityDTO
+        {
+            DayOfWeek = avaliability.DayOfWeek,
+            StartHour = avaliability.StartHour,
+            EndHour = avaliability.EndHour
+        }).ToList();
+
+        var appointmentDTOs = doctor.Appointment.Select(appointment => new AppointmentDTO
+        {
+            Date = appointment.Date,
+            Status = appointment.Status.ToString(),
+            Description = appointment.Description,
+            Notes = appointment.DoctorNotes,
+            DoctorName = doctor.Name, 
+            PatientName = appointment.Patient != null ? appointment.Patient.Name : null
+        }).ToList();
+
+        var result = new DoctorAvaliabilityWithAppointmentsDTO
+        {
+            Avaliabilities = avaliabilityDTOs,
+            Appointments = appointmentDTOs
+        };
+
+        return result;
     }
+
+
 
     public async Task<bool> DeleteDoctorAvailability(int availabilityId)
     {
@@ -174,20 +200,21 @@ public class DoctorService : IDoctorService
 
     public async Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
     {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
-        if (doctor == null)
-            return null;
+        throw new Exception();
+        //var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        //if (doctor == null)
+        //    return null;
 
-        var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialId);
-        if (credential == null)
-            return null;
+        //var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialId);
+        //if (credential == null)
+        //    return null;
 
-        credential.CredentialValue = doctorCredential.CredentialValue;
-        credential.CredentialType= doctorCredential.CredentialType;
+        //credential.CredentialValue = doctorCredential.CredentialValue;
+        //credential.CredentialType= doctorCredential.CredentialType;
 
-        await _unitOfWork.GetRepositories<Credential>().Update(credential);
+        //await _unitOfWork.GetRepositories<Credential>().Update(credential);
 
-        return _mapper.Map<CredentialDTO>(credential);
+        //return _mapper.Map<CredentialDTO>(credential);
     }
 
     public async Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)

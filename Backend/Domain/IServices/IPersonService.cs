@@ -1,4 +1,5 @@
-﻿using Domain.DTOs.Person;
+﻿using Domain.DTOs;
+using Domain.DTOs.Person;
 
 namespace Domain.IServices
 {

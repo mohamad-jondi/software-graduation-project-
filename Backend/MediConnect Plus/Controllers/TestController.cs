@@ -16,10 +16,10 @@ namespace MediConnect_Plus.Controllers
         }
 
 
-        [HttpGet("tests/{doctorUsername}")]
-        public async Task<ActionResult<IEnumerable<TestDTO>>> GetTests(string doctorUsername)
+        [HttpGet("tests/{CaseID}")]
+        public async Task<ActionResult<IEnumerable<TestDTO>>> GetTests(int CaseID)
         {
-            var tests = await _TestService.GetTests(doctorUsername);
+            var tests = await _TestService.GetTests(CaseID);
             return Ok(tests);
         }
 

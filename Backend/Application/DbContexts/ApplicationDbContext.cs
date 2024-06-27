@@ -80,7 +80,13 @@ namespace Data.DbContexts
                 .WithMany(d => d.Cases)
                 .HasForeignKey(c => c.DoctorId);
 
-         
+            modelBuilder.Entity<Appointment>()
+            .HasOne(a => a.Doctor)
+            .WithMany(d => d.Appointment)
+            .HasForeignKey(a => a.DoctorId);
+            modelBuilder.Entity<Picture>().HasKey(p => p.Id);
+
+
         }
     }
 }

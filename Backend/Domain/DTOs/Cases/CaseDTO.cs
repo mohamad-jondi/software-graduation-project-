@@ -6,9 +6,9 @@ namespace Domain.DTOs.Cases
     public class CaseDTO
     {
         public int CaseId { get; set; }
-        public int PatientID { get; set; }
-        public int DoctorId { get; set; }
-        public int NurseID { get; set; }
+        public string PatientUsername { get; set; }
+        public string DoctorUserName { get; set; }
+        public string NurseUserName { get; set; }
         public string CaseDescription { get; set; }
         public string Title { get; set; }
         public DateTime CreatedDate { get; set; }

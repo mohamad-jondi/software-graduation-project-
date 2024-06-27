@@ -25,11 +25,18 @@ namespace Domain.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<DoctorForInputDTO>> BrowseDoctors(string? location, string? specialty, string? name)
+        public async Task<IEnumerable<DoctorForBrowsingDTO>> BrowseDoctors(string? location, string? specialty, string? name)
         {
+            // Calculate the start and end dates of the current week
+            var currentDate = DateTime.Now;
+            var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1);
+
             var doctorsQuery = _unitOfWork.GetRepositories<Doctor>()
                 .Get()
                 .Include(d => d.Addresses)
+                .Include(d => d.Avalible)
+                .Include(d => d.Appointment.Where(a => a.Date >= startOfWeek && a.Date <= endOfWeek))
                 .Where(d =>
                     (string.IsNullOrEmpty(specialty) || d.Specialization == specialty) &&
                     (string.IsNullOrEmpty(name) || d.Name.Contains(name)) &&
@@ -43,7 +50,7 @@ namespace Domain.Services
                 );
 
             var doctors = await doctorsQuery.ToListAsync();
-            return _mapper.Map<IEnumerable<DoctorForInputDTO>>(doctors);
+            return _mapper.Map<IEnumerable<DoctorForBrowsingDTO>>(doctors);
         }
 
         public async Task<bool> AddEmergencyContact(string patientUsername, EmergencyContactInfoDTO emergencyContact)
@@ -93,7 +100,9 @@ namespace Domain.Services
                 Date = appointmentDate,
                 Doctor = doctor,
                 Patient = patient,
-                Status = AppointmentStatus.Pending 
+                Status = AppointmentStatus.Pending ,
+                Description = " ",
+                DoctorNotes = " ",
             };
 
             await _unitOfWork.GetRepositories<Appointment>().Add(appointment);

@@ -11,5 +11,8 @@ namespace Domain.DTOs.Person
         public Gender Gender { get; set; }
         public string? MaritalStatus { get; set; }
         public string? Occupation { get; set; }
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Email { get; set; }
     }
 }

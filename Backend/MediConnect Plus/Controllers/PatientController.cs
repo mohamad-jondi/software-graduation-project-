@@ -21,12 +21,11 @@ public class PatientController : ControllerBase
 
 
     [HttpGet("BrowseDoctors")]
-    public async Task<ActionResult<IEnumerable<DoctorForInputDTO>>> BrowseDoctors(string location, string specialty, string name)
+    public async Task<ActionResult<IEnumerable<DoctorForBrowsingDTO>>> BrowseDoctors(string? location, string? specialty, string? name)
     {
         var doctors = await _patientService.BrowseDoctors(location, specialty, name);
-        if (doctors != null && doctors.Any())
-            return Ok(doctors);
-        return BadRequest("No doctors found");
+
+        return Ok(doctors);
     }
 
     [HttpPost("AddEmergencyContact")]

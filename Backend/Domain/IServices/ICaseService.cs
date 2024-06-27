@@ -1,7 +1,7 @@
-﻿using Data.Models;
-using Domain.DTOs;
+﻿using Domain.DTOs;
 using Domain.DTOs.Cases;
-using System.Reflection.Metadata;
+using Domain.DTOs.Symptoms;
+
 
 namespace Domain.IServices
 {
@@ -9,13 +9,16 @@ namespace Domain.IServices
     {
         Task<IEnumerable<CaseDTO>> GetCasesAsync(string doctorUsername);
         Task<CaseDTO> GetCaseByIdAsync(int caseId);
-        Task<CaseDTO> AddCaseAsync(CaseDTO caseDTO);
+        Task<CaseDTO> AddCaseAsync(CaseForCreationDTO caseDTO);
         Task<bool> UpdateCaseAsync(int caseId, CaseDTO caseDTO);
         Task<bool> DeleteCaseAsync(int caseId);
-        Task<IEnumerable<DocumentDTO>> ViewDocuments(int CaseID);
-
-        Task<DocumentDTO> UploadDocument(int CaseID, DocumentDTO documentDTO);
-
+        Task<IEnumerable<DocumentDTO>> ViewDocuments(int caseId);
+        Task<DocumentDTO> UploadDocument(int caseId, DocumentDTO document);
         Task<bool> DeleteDocument(int documentId);
+        // Task<bool> AssignNurseAsync(int caseId, NurseDTO nurse);
+        Task<bool> AddDrugToCaseAsync(int caseId, DrugDTO drug);
+        Task<bool> AddNoteToCaseAsync(int caseId, string note);
+        Task<bool> AddSymptomToCaseAsync(int caseId, SymptomsDTO symptom);
+        Task<bool> AddDiagnosisToCaseAsync(int caseId, string diagnosis);
     }
 }

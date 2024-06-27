@@ -1,11 +1,13 @@
 ﻿using Domain.DTOs;
 using Domain.DTOs.Login;
+using Domain.DTOs.Person;
 namespace Domain.IServices
 {
     public interface IUserService
     {
+        Task<bool?> DoesUserGotPic(string username);
         Task<UserDTO> Register(RegisterModelDTO model);
-        Task<JWTTokensDTO> Login(LoginDTO login);
+        Task<PersonDTO> Login(LoginDTO login);
         Task<bool> AuthinticateEmail(AuthinticateEmailDTO randomNumber);
         Task<bool> RecovePasswordRequest(RecoverPasswordRequestDTO passwordRequest);
         Task<bool> ResetPassword (ResetPasswordDTO resetPassword);

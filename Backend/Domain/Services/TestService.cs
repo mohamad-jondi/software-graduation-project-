@@ -18,15 +18,16 @@ namespace Domain.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        public async Task<IEnumerable<TestDTO>> GetTests(string PatientUsername)
+        public async Task<IEnumerable<TestDTO>> GetTests(int CaseID)
         {
-            var tests = await _unitOfWork.GetRepositories<Test>()
+            var tests = await _unitOfWork.GetRepositories<Case>()
                 .Get()
                 .Include(t => t.Patient)
-                .Where(t => t.Patient.Username == PatientUsername)
-                .ToListAsync();
+                .Include(t=> t.Tests)
+                .Where(t => t.CaseId == CaseID)
+                .FirstOrDefaultAsync();
 
-            return _mapper.Map<IEnumerable<TestDTO>>(tests);
+            return _mapper.Map<IEnumerable<TestDTO>>(tests.Tests);
         }
 
         public async Task<TestDTO> AddTest(int CaseID, TestDTO testDTO)

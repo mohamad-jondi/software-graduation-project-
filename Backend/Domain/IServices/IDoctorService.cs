@@ -8,10 +8,10 @@ namespace Domain.IServices
 {
     public interface IDoctorService
     {
-        Task<IEnumerable<AppointmentDTO>> GetAcceptedAppointments(string doctorUsername);
-        Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername);
-        Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO);
-        Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername);
+        Task<IEnumerable<AppointmentForShowDTO>> GetAcceptedAppointments(string doctorUsername);
+        Task<IEnumerable<AppointmentForShowDTO>> GetPendingAppointments(string doctorUsername);
+        Task<bool> ManageAppointment( AppointmentMangmentDTO appointmentDTO);
+        Task<DoctorAvaliabilityWithAppointmentsDTO> GetDoctorAvailability(string doctorUsername);
         Task<bool> DeleteDoctorAvailability(int availabilityId);
         Task<AvaliabilityDTO> AddDoctorAvailability(string doctorUsername, AvaliabilityDTO availabilityDTO);
         Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO);

@@ -21,30 +21,30 @@ public class DoctorController : ControllerBase
     }
 
     [HttpGet("accepted-appointments/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAcceptedAppointments(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<AppointmentForShowDTO>>> GetAcceptedAppointments(string doctorUsername)
     {
         var appointments = await _doctorService.GetAcceptedAppointments(doctorUsername);
         return Ok(appointments);
     }
 
     [HttpGet("pending-appointments/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetPendingAppointments(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<AppointmentForShowDTO>>> GetPendingAppointments(string doctorUsername)
     {
         var appointments = await _doctorService.GetPendingAppointments(doctorUsername);
         return Ok(appointments);
     }
 
-    [HttpPut("manage-appointment/{appointmentId}")]
-    public async Task<IActionResult> ManageAppointment(int appointmentId, [FromBody] AppointmentDTO appointmentDTO)
+    [HttpPut("manage-appointment")]
+    public async Task<IActionResult> ManageAppointment([FromBody] AppointmentMangmentDTO appointmentDTO)
     {
-        var result = await _doctorService.ManageAppointment(appointmentId, appointmentDTO);
+        var result = await _doctorService.ManageAppointment( appointmentDTO);
         if (result)
             return Ok();
         return BadRequest();
     }
 
     [HttpGet("availability/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AvaliabilityDTO>>> GetDoctorAvailability(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<DoctorAvaliabilityWithAppointmentsDTO>>> GetDoctorAvailability(string doctorUsername)
     {
         var availabilities = await _doctorService.GetDoctorAvailability(doctorUsername);
         return Ok(availabilities);

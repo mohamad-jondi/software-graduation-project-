@@ -18,38 +18,56 @@ namespace Domain.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ChatForShowingFromTheOutsideDTO>> GetChatsByUserUsername(string username)
+       public async Task<IEnumerable<ChatForShowingFromTheOutsideDTO>> GetChatsByUserUsername(string username)
+{
+    var userChats = await _unitOfWork.GetRepositories<Chat>()
+        .Get()
+        .Include(c => c.Messages)
+        .Include(c => c.SecondParty)
+        .Include(c => c.FirstParty)
+        .Where(c => c.FirstParty.Username == username || c.SecondParty.Username == username)
+        .ToListAsync();
+
+    var chatDtos = new List<ChatForShowingFromTheOutsideDTO>();
+
+    foreach (var chat in userChats)
+    {
+        var lastMessage = chat.Messages.OrderByDescending(m => m.SentDateTime).FirstOrDefault();
+
+        // New logic to count unread messages until the first read message
+        var sortedMessages = chat.Messages.OrderByDescending(m => m.SentDateTime).ToList();
+        int unreadMessagesCount = 0;
+
+        foreach (var message in sortedMessages)
         {
-            var userChats = await _unitOfWork.GetRepositories<Chat>()
-                .Get()
-                .Include(c => c.Messages)
-                .Include(c => c.SecondParty)
-                .Include(c => c.FirstParty)
-                .Where(c => c.FirstParty.Username == username || c.SecondParty.Username == username)
-                .ToListAsync();
-
-            var chatDtos = new List<ChatForShowingFromTheOutsideDTO>();
-
-            foreach (var chat in userChats)
+            if (message.IsRead)
             {
-                var lastMessage = chat.Messages.OrderByDescending(m => m.SentDateTime).FirstOrDefault();
-                var unreadMessagesCount = chat.Messages.Count(m => !m.IsRead && m.SenderUsername != username);
-
-                var chatDto = new ChatForShowingFromTheOutsideDTO
-                {
-                    ChatId = chat.ChatID,
-                    FirstPartyUserName = chat.FirstParty.Username,
-                    SecondPartyUsername = chat.SecondParty.Username,
-                    IsTheLastSenderMe = lastMessage != null && lastMessage.SenderUsername == username,
-                    lastSentMassagess = lastMessage?.MessageContent,
-                    numberOfMessages = unreadMessagesCount
-                };
-
-                chatDtos.Add(chatDto);
+                break;
             }
 
-            return chatDtos;
+            if (!message.IsRead && message.SenderUsername != username)
+            {
+                unreadMessagesCount++;
+            }
         }
+
+        var chatDto = new ChatForShowingFromTheOutsideDTO
+        {
+            ChatId = chat.ChatID,
+            FirstPartyUserName = chat.FirstParty.Username,
+            SecondPartyUsername = chat.SecondParty.Username,
+            IsTheLastSenderMe = lastMessage != null && lastMessage.SenderUsername == username,
+            lastSentMassagess = lastMessage?.MessageContent,
+            LastMessageDate = lastMessage.SentDateTime,
+            numberOfMessages = unreadMessagesCount
+        };
+
+        chatDtos.Add(chatDto);
+    }
+
+    return chatDtos;
+}
+
 
         public async Task<IEnumerable< ChatMessageDTO>> BrowseChat(int ChatID)
         {
@@ -90,6 +108,7 @@ namespace Domain.Services
 
             var chatMessage = _mapper.Map<ChatMessage>(chatMessageDTO);
             chatMessage.SenderUsername = senderUsername;
+            chatMessage.SentDateTime = DateTime.UtcNow;
             chat.Messages.Add(chatMessage);
             await _unitOfWork.GetRepositories<Chat>().Update(chat);
 
@@ -102,6 +121,22 @@ namespace Domain.Services
             if (message == null) return false;
 
             await _unitOfWork.GetRepositories<ChatMessage>().Delete(message);
+            return true;
+        }
+
+        public async Task<bool> SetChatAsRead(int chatId)
+        {
+            var chat = await _unitOfWork.GetRepositories<ChatMessage>()
+                .Get()
+                .FirstOrDefaultAsync(c => c.ChatMessageID == chatId);
+
+            if (chat == null)
+            {
+                throw new Exception("Chat not found");
+            }
+
+            chat.IsRead = true;
+           await _unitOfWork.GetRepositories<ChatMessage>().Update(chat);
             return true;
         }
     }
