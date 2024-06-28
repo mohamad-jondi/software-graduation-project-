@@ -278,7 +278,7 @@ public class DoctorService : IDoctorService
             return false;
 
         caseInfo.Diagnosis = caseDTO.Diagnosis;
-        caseInfo.TreatmentPlan = _mapper.Map<TreatmentPlan>(caseDTO.TreatmentPlan);
+       // caseInfo.TreatmentPlan = _mapper.Map<TreatmentPlan>(caseDTO.TreatmentPlan);
         await _unitOfWork.GetRepositories<Case>().Update(caseInfo);
 
         return true;

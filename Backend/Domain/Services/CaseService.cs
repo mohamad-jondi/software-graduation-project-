@@ -1,22 +1,27 @@
 ﻿using AutoMapper;
 using Data.Interfaces;
+using Data.Migrations;
 using Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Symptoms;
 using Domain.IServices;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 
 public class CaseService : ICaseService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IWebHostEnvironment _env;
 
-    public CaseService(IUnitOfWork unitOfWork, IMapper mapper)
+    public CaseService(IUnitOfWork unitOfWork, IMapper mapper, IWebHostEnvironment env)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _env = env;
     }
 
     public async Task<IEnumerable<CaseDTO>> GetCasesAsync(string doctorUsername)
@@ -25,6 +30,10 @@ public class CaseService : ICaseService
             .Get()
             .Include(c => c.Doctor)
             .Include(c=> c.Patient)
+            .Include(c=> c.Drugs)
+            .Include(c => c.RelatedDocuments)
+            .Include(c => c.Tests)
+            .Include(c => c.symptoms)
             .Where(c => c.Doctor.Username == doctorUsername || c.Patient.Username== doctorUsername)
             .ToListAsync();
 
@@ -36,6 +45,11 @@ public class CaseService : ICaseService
         var caseEntity = await _unitOfWork.GetRepositories<Case>()
             .Get()
             .Include(c => c.Doctor)
+            .Include(c=> c.Patient)
+            .Include(c => c.Drugs)
+            .Include(c => c.RelatedDocuments)
+            .Include(c => c.Tests)
+            .Include(c => c.symptoms)
             .FirstOrDefaultAsync(c => c.CaseId == caseId);
 
         if (caseEntity == null)
@@ -60,17 +74,29 @@ public class CaseService : ICaseService
         return _mapper.Map<CaseDTO>(addedCase);
     }
 
-    public async Task<bool> UpdateCaseAsync(int caseId, CaseDTO caseDTO)
+    public async Task<CaseDTO> UpdateCaseAsync(int caseId, CaseForUpdating caseDTO)
     {
         var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
         if (caseEntity == null)
-            return false;
+            return null;
 
-        caseEntity.Diagnosis = caseDTO.Diagnosis;
-        caseEntity.TreatmentPlan = _mapper.Map<TreatmentPlan>(caseDTO.TreatmentPlan);
-        await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+        if (caseDTO.CaseDescription != null)
+            caseEntity.CaseDescription = caseDTO.CaseDescription;
 
-        return true;
+        if (caseDTO.Title != null)
+            caseEntity.Title = caseDTO.Title;
+
+        if (caseDTO.CreatedDate.HasValue)
+            caseEntity.CreatedDate = caseDTO.CreatedDate.Value;
+
+        if (caseDTO.Diagnosis != null)
+            caseEntity.Diagnosis = caseDTO.Diagnosis;
+
+        var x = await  _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+      
+       
+
+        return _mapper.Map<CaseDTO>(x);
     }
 
     public async Task<bool> DeleteCaseAsync(int caseId)
@@ -132,23 +158,65 @@ public class CaseService : ICaseService
         return true;
     }
 
-    public Task<bool> AddDrugToCaseAsync(int caseId, DrugDTO drug)
+    public async Task<bool> AddDrugToCaseAsync(int caseId, DrugDTO drug)
     {
-        throw new NotImplementedException();
+        var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().Include(d=> d.Drugs).FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseEntity == null)
+            return false;
+        var x = _mapper.Map<Drug>(drug);
+        caseEntity.Drugs.Add(x);
+        await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+        return true;
+
     }
 
-    public Task<bool> AddNoteToCaseAsync(int caseId, string note)
+    public async Task<RelatedDocumentDTO> AddDocumetAsync(int caseId, ImageUploadRequestDTO note)
     {
-        throw new NotImplementedException();
+        var user = await _unitOfWork.GetRepositories<Case>().Get().Where(c => c.CaseId == caseId).FirstOrDefaultAsync();
+
+        if (user == null) { throw new Exception(); }
+
+        var filePath = Path.Combine(_env.WebRootPath, "uploads", note.FileName);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+        var imageData = Convert.FromBase64String(note.Base64Image);
+
+        await File.WriteAllBytesAsync(filePath, imageData);
+
+        var picture = new Documents
+        {
+            FileName = note.FileName,
+            Data = imageData,
+           
+            Url = $"/uploads/{note.FileName}",
+            Case = user
+        };
+
+        
+       var x=await _unitOfWork.GetRepositories<Documents>().Add(picture);
+       
+        return _mapper.Map<RelatedDocumentDTO>(x);
     }
 
-    public Task<bool> AddSymptomToCaseAsync(int caseId, SymptomsDTO symptom)
+    public async Task<bool> AddSymptomToCaseAsync(int caseId, SymptomsDTO symptom)
     {
-        throw new NotImplementedException();
+        var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().Include(d => d.symptoms).FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseEntity == null)
+            return false;
+        var x = _mapper.Map<Symptoms>(symptom);
+        caseEntity.symptoms.Add(x);
+        await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+        return true;
     }
 
-    public Task<bool> AddDiagnosisToCaseAsync(int caseId, string diagnosis)
+    public async Task<bool> AddDiagnosisToCaseAsync(int caseId, string diagnosis)
     {
-        throw new NotImplementedException();
+        var caseEntity = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseEntity == null)
+            return false;
+        caseEntity.Diagnosis = diagnosis;
+        await _unitOfWork.GetRepositories<Case>().Update(caseEntity);
+        return true;
     }
 }

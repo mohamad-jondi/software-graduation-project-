@@ -14,17 +14,12 @@
             [Required]
             public string Name { get; set; }
             public string Duration { get; set; }
+        [ForeignKey("CaseID")]
+        public int CaseID { get; set; }
+        public Case Case { get; set; }
 
-            [ForeignKey("DoctorID")]
-            public int PrescribedByID { get; set; }
 
-            public Doctor PrescribedBy { get; set; }
-
-            [ForeignKey("PatientID")]
-            public int PatientID { get; set; }
-
-            public Patient Patient { get; set; }
-            public int QuantityConsumed{ get; set; }
+        public int QuantityConsumed{ get; set; }
 
             public DrugDosageTime DrugDosageTime { get; set; }
 

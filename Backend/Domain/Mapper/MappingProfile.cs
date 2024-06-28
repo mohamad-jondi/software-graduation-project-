@@ -32,6 +32,7 @@ namespace Domain.Mapper
             CreateMap<Vaccination, VaccinationForUpdatingDTO>().ReverseMap();
             CreateMap<Doctor, DoctorWithCredinttialsDTO>().ReverseMap();
             CreateMap<Credential, CredentialForShowDTO>().ReverseMap();
+            CreateMap<Documents,RelatedDocumentDTO>().ReverseMap();
 
             CreateMap<Avaliability, AvaliabilityDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForBrowsingDTO>().ReverseMap();

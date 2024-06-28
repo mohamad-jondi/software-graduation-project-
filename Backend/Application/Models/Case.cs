@@ -31,7 +31,7 @@ namespace Data.Models
         public ICollection<Documents> RelatedDocuments { get; set; }
         public ICollection<MedicalSecondOpinion> SecondOpinionRequests { get; set; }
         public ICollection<Appointment> Appointments { get; set; }
-        public TreatmentPlan TreatmentPlan { get; set; } 
+        public ICollection<Drug> Drugs{ get; set; } 
     }
 
 }
