@@ -24,7 +24,8 @@ public class CaseService : ICaseService
         var cases = await _unitOfWork.GetRepositories<Case>()
             .Get()
             .Include(c => c.Doctor)
-            .Where(c => c.Doctor.Username == doctorUsername)
+            .Include(c=> c.Patient)
+            .Where(c => c.Doctor.Username == doctorUsername || c.Patient.Username== doctorUsername)
             .ToListAsync();
 
         return _mapper.Map<IEnumerable<CaseDTO>>(cases);

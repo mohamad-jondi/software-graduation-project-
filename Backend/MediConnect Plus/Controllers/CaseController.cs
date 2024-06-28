@@ -24,6 +24,15 @@ public class CaseController : ControllerBase
             return Ok(cases);
         return NotFound("No cases found for the specified doctor.");
     }
+    [HttpGet("Pateint/{PateintUsername}")]
+    public async Task<ActionResult<IEnumerable<CaseDTO>>> GetCasesBypatient(string PateintUsername)
+    {
+        var cases = await _caseService.GetCasesAsync(PateintUsername);
+        if (cases != null)
+            return Ok(cases);
+        return NotFound("No cases found for the specified doctor.");
+    }
+
 
     [HttpGet("{caseId}")]
     public async Task<ActionResult<CaseDTO>> GetCaseById(int caseId)

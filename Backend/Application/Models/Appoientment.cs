@@ -25,6 +25,10 @@ namespace Data.Models
         public int? PatientId { get; set; }
         public Patient? Patient { get; set; }
 
+        [ForeignKey("caseID")]
+        public int? caseID { get; set;}
+        public Case? Case {  get; set; }
+
         [ForeignKey("ChildId")]
         public int? ChildID { get; set; }
         public Child? childPAtient { get; set; }
