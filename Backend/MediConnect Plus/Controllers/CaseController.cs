@@ -68,6 +68,14 @@ public class CaseController : ControllerBase
         return BadRequest("Failed to add drug to case.");
     }
 
+    [HttpPost("case/{caseId}/drug-DDI-Check")]
+    public async Task<IActionResult> DrugDDICheck(int caseId, [FromBody] DrugDTO drug)
+    {
+        var result = new Random().Next(2) == 0;
+        return Ok(result);
+
+    }
+
     [HttpPost("case/{caseId}/add-symptom")]
     public async Task<IActionResult> AddSymptomToCase(int caseId, [FromBody] SymptomsDTO symptom)
     {
