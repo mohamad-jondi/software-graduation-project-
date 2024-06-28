@@ -15,5 +15,7 @@
         public string MaritalStatus { get; set; }
         public string Occupation { get; set; }
         public string PersonType { get; set; }
+        public bool isVerifedDoctor { get; set; }
+        public bool isAdmin { get; set; }
     }
 }

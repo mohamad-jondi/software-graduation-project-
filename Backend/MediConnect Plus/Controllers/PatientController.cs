@@ -1,5 +1,5 @@
-﻿using Domain.DTOs;
-using Domain.DTOs.Allergy;
+﻿using Domain.DTOs.Allergy;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.LifestyleFactors;
 using Domain.DTOs.Patient;
@@ -21,12 +21,11 @@ public class PatientController : ControllerBase
 
 
     [HttpGet("BrowseDoctors")]
-    public async Task<ActionResult<IEnumerable<DoctorForInputDTO>>> BrowseDoctors(string location, string specialty, string name)
+    public async Task<ActionResult<IEnumerable<DoctorForBrowsingDTO>>> BrowseDoctors(string? location, string? specialty, string? name)
     {
         var doctors = await _patientService.BrowseDoctors(location, specialty, name);
-        if (doctors != null && doctors.Any())
-            return Ok(doctors);
-        return BadRequest("No doctors found");
+
+        return Ok(doctors);
     }
 
     [HttpPost("AddEmergencyContact")]
@@ -39,11 +38,17 @@ public class PatientController : ControllerBase
     }
 
     [HttpPost("RequestAppointment")]
-    public async Task<IActionResult> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+    public async Task<IActionResult> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate,string Description)
     {
-        var result = await _patientService.RequestAppointment(patientUsername, doctorUsername, appointmentDate);
-        if (result)
-            return Ok("Appointment requested successfully");
+        try
+        {
+            var result = await _patientService.RequestAppointment(patientUsername, doctorUsername, appointmentDate,  Description);
+            if (result)
+                return Ok("Appointment requested successfully");
+        }catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
         return BadRequest("Failed to request appointment");
     }
 
@@ -109,15 +114,6 @@ public class PatientController : ControllerBase
             return Ok(allergies);
         return BadRequest("No allergies found");
     }
-
-    [HttpGet("BrowseVaccinations")]
-    public async Task<ActionResult<IEnumerable<VaccinationForOutputDTO>>> BrowseVaccinations(string patientUsername)
-    {
-        var vaccinations = await _patientService.BrowseVaccination(patientUsername);
-        if (vaccinations != null && vaccinations.Any())
-            return Ok(vaccinations);
-        return BadRequest("No vaccinations found");
-    }
     [HttpGet("BrowseLifeStyleFactors")]
     public async Task<ActionResult<LifestyleFactorsDTO>> GetLifeStyleFactors(string patientUsername)
     {
@@ -144,32 +140,8 @@ public class PatientController : ControllerBase
             return Ok(LifestyleFactors);
         return BadRequest("No Patient found");
     }
-    [HttpPost("AddVaccination")]
-    public async Task<ActionResult<VaccinationForOutputDTO>> AddVaccination(string patientUsername, VaccinationDTO vaccination)
-    {
-        var result = await _patientService.AddVaccination(patientUsername, vaccination);
-        if (result != null)
-            return Ok(result);
-        return BadRequest("Failed to add vaccination");
-    }
-
-    [HttpDelete("DeleteVaccination/{vaccinationId}")]
-    public async Task<IActionResult> DeleteVaccination(int vaccinationId)
-    {
-        var result = await _patientService.DeleteVaccination(vaccinationId);
-        if (result)
-            return Ok("Vaccination deleted successfully");
-        return BadRequest("Failed to delete vaccination");
-    }
-
-    [HttpPut("UpdateVaccination/{vaccinationId}")]
-    public async Task<ActionResult<VaccinationForOutputDTO>> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination)
-    {
-        var vaccination = await _patientService.UpdateVaccination(vaccinationId, updatedVaccination);
-        if (vaccination != null)
-            return Ok(vaccination);
-        return BadRequest("Failed to update vaccination");
-    }
+    
+    
 
     [HttpGet("ViewFullDetailsPatient")]
     public async Task<ActionResult<PatientFullDTO>> ViewFullDetailsPatient(string patientUsername)

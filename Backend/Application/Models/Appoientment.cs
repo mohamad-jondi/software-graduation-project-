@@ -22,8 +22,19 @@ namespace Data.Models
         public Doctor Doctor { get; set; }
 
         [ForeignKey("PatientID")]
-        public int PatientId { get; set; }
-        public Patient Patient { get; set; }
+        public int? PatientId { get; set; }
+        public Patient? Patient { get; set; }
+
+        [ForeignKey("caseID")]
+        public int? caseID { get; set;}
+        public Case? Case {  get; set; }
+
+        [ForeignKey("ChildId")]
+        public int? ChildID { get; set; }
+        public Child? childPAtient { get; set; }
+
+        public string? CanceledBy { get; set; }
+        public string? CanceledReson { get; set; }
     }
 
 }

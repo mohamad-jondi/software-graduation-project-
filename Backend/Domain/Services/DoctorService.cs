@@ -2,24 +2,28 @@
 using Data.enums;
 using Data.Interfaces;
 using Data.Models;
+using Domain.DTOs;
+using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
 using Domain.DTOs.Patient;
-using Domain.DTOs;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
+using Domain.DTOs;
+using Microsoft.AspNetCore.Hosting;
 
 public class DoctorService : IDoctorService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-
-    public DoctorService(IUnitOfWork unitOfWork, IMapper mapper)
+    private readonly IWebHostEnvironment _environment;
+    public DoctorService(IUnitOfWork unitOfWork, IMapper mapper,IWebHostEnvironment env)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _environment = env;
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetAccpetedAppointments(string doctorUsername)
+    public async Task<IEnumerable<AppointmentForShowDTO>> GetAcceptedAppointments(string doctorUsername)
     {
         var appointments = await _unitOfWork.GetRepositories<Appointment>()
             .Get()
@@ -28,10 +32,10 @@ public class DoctorService : IDoctorService
             .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Accepted)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        return _mapper.Map<IEnumerable<AppointmentForShowDTO>>(appointments);
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetPendingAppointments(string doctorUsername)
+    public async Task<IEnumerable<AppointmentForShowDTO>> GetPendingAppointments(string doctorUsername)
     {
         var appointments = await _unitOfWork.GetRepositories<Appointment>()
             .Get()
@@ -40,43 +44,68 @@ public class DoctorService : IDoctorService
             .Where(a => a.Doctor.Username == doctorUsername && a.Status == AppointmentStatus.Pending)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+        return _mapper.Map<IEnumerable<AppointmentForShowDTO>>(appointments);
     }
 
-    public async Task<bool> ManageAppointment(int appointmentId, AppointmentDTO appointmentDTO)
+    public async Task<bool> ManageAppointment(AppointmentMangmentDTO appointmentDTO)
     {
-        var appointment = await _unitOfWork.GetRepositories<Appointment>()
-            .Get()
-            .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+        var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().FirstOrDefaultAsync(a => a.AppointmentId == appointmentDTO.appointmentId);
+        if (appointment == null)
+            return false;
 
-        if (appointment == null) return false;
+        appointment.Status = appointmentDTO.AppointmentStatus;
+        var x = await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
 
-        appointment.Status = Enum.Parse<AppointmentStatus>(appointmentDTO.Status);
-        appointment.Description = appointmentDTO.Description;
-        appointment.DoctorNotes = appointmentDTO.Notes;
-
-        await _unitOfWork.GetRepositories<Appointment>().Update(appointment);
         return true;
     }
 
-    public async Task<IEnumerable<AvaliabilityDTO>> GetDoctorAvailability(string doctorUsername)
+    public async Task<DoctorAvaliabilityWithAppointmentsDTO> GetDoctorAvailability(string doctorUsername)
     {
-        var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
+        var doctor = await _unitOfWork.GetRepositories<Doctor>()
             .Get()
-            .Include(a => a.Doctor)
-            .Where(a => a.Doctor.Username == doctorUsername)
-            .ToListAsync();
+            .Include(d => d.Avalible)
+            .Include(d => d.Appointment)
+            .ThenInclude(a => a.Patient) 
+            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
 
-        return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
+        if (doctor == null)
+        {
+            return null; // or handle the case where the doctor is not found
+        }
+
+        var avaliabilityDTOs = doctor.Avalible.Select(avaliability => new AvaliabilityDTO
+        {
+            DayOfWeek = avaliability.DayOfWeek,
+            StartHour = avaliability.StartHour,
+            EndHour = avaliability.EndHour
+        }).ToList();
+
+        var appointmentDTOs = doctor.Appointment.Select(appointment => new AppointmentDTO
+        {
+            Date = appointment.Date,
+            Status = appointment.Status.ToString(),
+            Description = appointment.Description,
+            Notes = appointment.DoctorNotes,
+            DoctorName = doctor.Name, 
+            PatientName = appointment.Patient != null ? appointment.Patient.Name : null
+        }).ToList();
+
+        var result = new DoctorAvaliabilityWithAppointmentsDTO
+        {
+            Avaliabilities = avaliabilityDTOs,
+            Appointments = appointmentDTOs
+        };
+
+        return result;
     }
 
-    public async Task<bool> DeleteDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
-    {
-        var availability = await _unitOfWork.GetRepositories<Avaliability>()
-            .Get()
-            .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
 
-        if (availability == null) return false;
+
+    public async Task<bool> DeleteDoctorAvailability(int availabilityId)
+    {
+        var availability = await _unitOfWork.GetRepositories<Avaliability>().Get().FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+        if (availability == null)
+            return false;
 
         await _unitOfWork.GetRepositories<Avaliability>().Delete(availability);
         return true;
@@ -84,56 +113,62 @@ public class DoctorService : IDoctorService
 
     public async Task<AvaliabilityDTO> AddDoctorAvailability(string doctorUsername, AvaliabilityDTO availabilityDTO)
     {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>()
-            .Get()
-            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-        if (doctor == null) return null;
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
 
         var availability = _mapper.Map<Avaliability>(availabilityDTO);
-        availability.DoctorID = doctor.Id;
+        availability.Doctor = doctor;
+        var addedAvailability = await _unitOfWork.GetRepositories<Avaliability>().Add(availability);
 
-        await _unitOfWork.GetRepositories<Avaliability>().Add(availability);
-        return _mapper.Map<AvaliabilityDTO>(availability);
+        return _mapper.Map<AvaliabilityDTO>(addedAvailability);
     }
 
     public async Task<AvaliabilityDTO> UpdateDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
     {
-        var availability = await _unitOfWork.GetRepositories<Avaliability>()
-            .Get()
-            .FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
-
-        if (availability == null) return null;
+        var availability = await _unitOfWork.GetRepositories<Avaliability>().Get().FirstOrDefaultAsync(a => a.AvalibailityID == availabilityId);
+        if (availability == null)
+            return null;
 
         availability.DayOfWeek = availabilityDTO.DayOfWeek;
         availability.StartHour = availabilityDTO.StartHour;
         availability.EndHour = availabilityDTO.EndHour;
-
         await _unitOfWork.GetRepositories<Avaliability>().Update(availability);
+
         return _mapper.Map<AvaliabilityDTO>(availability);
     }
 
-    public async Task<IEnumerable<AvaliabilityDTO>> UpdateRangeDoctorAvailability(int availabilityId, IEnumerable<AvaliabilityDTO> availabilityDTOs)
-    {
-        var availabilities = await _unitOfWork.GetRepositories<Avaliability>()
-            .Get()
-            .Where(a => a.AvalibailityID == availabilityId)
-            .ToListAsync();
+    //public async task<ienumerable<avaliabilitydto>> updaterangedoctoravailability(int availabilityid, ienumerable<avaliabilitydto> availabilitydtos)
+    //{
+    //    var availabilities = await _unitofwork.getrepositories<avaliability>().get().where(a => a.avalibailityid == availabilityid).tolistasync();
+    //    if (availabilities == null)
+    //        return null;
 
-        await _unitOfWork.GetRepositories<Avaliability>().UpdateRange(availabilities);
-        return _mapper.Map<IEnumerable<AvaliabilityDTO>>(availabilities);
-    }
+    //    foreach (var availabilitydto in availabilitydtos)
+    //    {
+    //        var availability = availabilities.firstordefault(a => a.avalibailityid == availabilityid);
+    //        if (availability != null)
+    //        {
+    //            availability.dayofweek = availabilitydto.dayofweek;
+    //            availability.starthour = availabilitydto.starthour;
+    //            availability.endhour = availabilitydto.endhour;
+    //        }
+    //    }
+    //    await _unitofwork.getrepositories<avaliability>().updaterange(availabilities);
+
+    //    return _mapper.map<ienumerable<avaliabilitydto>>(availabilities);
+    //}
 
     public async Task<AppointmentReminderDTO> GetUpcomingAppointmentsReminders(string doctorUsername)
     {
-        // Implementation for getting upcoming appointment reminders
-        throw new NotImplementedException();
+        // Implement logic to get upcoming appointment reminders
+        return new AppointmentReminderDTO();
     }
 
     public async Task<bool> RequestAccessToPatientData(string doctorUsername, string patientUsername)
     {
-        // Implementation for requesting access to patient data
-        throw new NotImplementedException();
+        // Implement logic to request access to patient data
+        return true;
     }
 
     public async Task<PatientFullDTO> ViewPatientHistory(string patientUsername)
@@ -143,175 +178,187 @@ public class DoctorService : IDoctorService
             .Include(p => p.Allergies)
             .Include(p => p.Vaccinations)
             .Include(p => p.cases)
+            .Include(p => p.EmergancyContact)
             .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+        if (patient == null)
+            return null;
 
         return _mapper.Map<PatientFullDTO>(patient);
     }
 
     public async Task<IEnumerable<DocumentDTO>> ViewPatientDocuments(string patientUsername)
     {
-        throw new NotImplementedException();
+        var patient = await _unitOfWork.GetRepositories<Patient>()
+            .Get()
+            .Include(p => p.RelatedDocumtents)
+            .FirstOrDefaultAsync(p => p.Username == patientUsername);
+
+        if (patient == null)
+            return null;
+
+        return _mapper.Map<IEnumerable<DocumentDTO>>(patient.RelatedDocumtents);
     }
 
     public async Task<CredentialDTO> UpdateDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
     {
-        throw new NotImplementedException();
+        throw new Exception();
+        //var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        //if (doctor == null)
+        //    return null;
+
+        //var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialId);
+        //if (credential == null)
+        //    return null;
+
+        //credential.CredentialValue = doctorCredential.CredentialValue;
+        //credential.CredentialType= doctorCredential.CredentialType;
+
+        //await _unitOfWork.GetRepositories<Credential>().Update(credential);
+
+        //return _mapper.Map<CredentialDTO>(credential);
     }
 
     public async Task<bool> DeleteDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
     {
-        throw new NotImplementedException();
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().Include(d => d.credential).FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return false;
+
+        var credential = doctor.credential.FirstOrDefault(c => c.CredentialID == doctorCredential.CredentialId);
+        if (credential == null)
+            return false;
+
+        await _unitOfWork.GetRepositories<Credential>().Delete(credential);
+
+        return true;
     }
 
     public async Task<CredentialDTO> AddDoctorCredential(string doctorUsername, CredentialDTO doctorCredential)
     {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>()
-            .Get()
-            .Include(d => d.credential)
-            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
-
-        if (doctor == null) return null;
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return null;
 
         var credential = _mapper.Map<Credential>(doctorCredential);
         doctor.credential.Add(credential);
+        await _unitOfWork.GetRepositories<Credential>().Add(credential);
 
-        await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
         return _mapper.Map<CredentialDTO>(credential);
     }
 
-    public async Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
+    public async Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, string specializationDTO)
     {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>()
-            .Get()
-            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        var doctor = await _unitOfWork.GetRepositories<Doctor>().Get().FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        if (doctor == null)
+            return false;
 
-        if (doctor == null) return false;
-
-        doctor.DoctorWorkType = specializationDTO;
+        doctor.Specialization = specializationDTO;
         await _unitOfWork.GetRepositories<Doctor>().Update(doctor);
+
         return true;
     }
 
+    // Cases Management
     public async Task<IEnumerable<CaseDTO>> ViewCases(string doctorUsername)
     {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> ManageCase(int caseId, CaseDTO caseDTO)
-    {
-       throw new NotImplementedException();
-    }
-
-    public async Task<IEnumerable<TestDTO>> GetTests(string doctorUsername)
-    {
-        var tests = await _unitOfWork.GetRepositories<Test>()
+        var cases = await _unitOfWork.GetRepositories<Case>()
             .Get()
-            .Include(t => t.Patient)
-            .Where(t => t.Patient.Username == doctorUsername)
+            .Include(c => c.Doctor)
+            .Where(c => c.Doctor.Username == doctorUsername)
             .ToListAsync();
 
-        return _mapper.Map<IEnumerable<TestDTO>>(tests);
+        return _mapper.Map<IEnumerable<CaseDTO>>(cases);
     }
 
-    public async Task<TestDTO> AddTest(string doctorUsername, TestDTO testDTO)
+    public async Task<bool> UpdateCaseInformation(int caseId, CaseDTO caseDTO)
     {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>()
-            .Get()
-            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
+        var caseInfo = await _unitOfWork.GetRepositories<Case>().Get().FirstOrDefaultAsync(c => c.CaseId == caseId);
+        if (caseInfo == null)
+            return false;
 
-        if (doctor == null) return null;
+        caseInfo.Diagnosis = caseDTO.Diagnosis;
+       // caseInfo.TreatmentPlan = _mapper.Map<TreatmentPlan>(caseDTO.TreatmentPlan);
+        await _unitOfWork.GetRepositories<Case>().Update(caseInfo);
 
-        var test = _mapper.Map<Test>(testDTO);
-        test.PatientID = doctor.Id;
-
-        await _unitOfWork.GetRepositories<Test>().Add(test);
-        return _mapper.Map<TestDTO>(test);
-    }
-
-    public async Task<bool> UpdateTestStatus(int testId, TestStatus status)
-    {
-        var test = await _unitOfWork.GetRepositories<Test>()
-            .Get()
-            .FirstOrDefaultAsync(t => t.TestID == testId);
-
-        if (test == null) return false;
-
-        test.Status = status;
-        await _unitOfWork.GetRepositories<Test>().Update(test);
         return true;
     }
 
-    public async Task<bool> DeleteTest(int testId)
+
+
+
+
+    public async Task<string> SaveCredintailsAsync(string username, string fileName, byte[] imageData)
     {
-        var test = await _unitOfWork.GetRepositories<Test>()
-            .Get()
-            .FirstOrDefaultAsync(t => t.TestID == testId);
 
-        if (test == null) return false;
+        var user = await _unitOfWork.GetRepositories<Doctor>().Get().Where(c => c.Username == username).FirstOrDefaultAsync();
 
-        await _unitOfWork.GetRepositories<Test>().Delete(test);
-        return true;
+        if (user == null) { throw new Exception(); }
+
+        var filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+        await File.WriteAllBytesAsync(filePath, imageData);
+
+        var picture = new Credential
+        {
+            FileName = fileName,
+            Data = imageData,
+            Url = $"/uploads/{fileName}",
+            Doctor = user
+        };
+
+        try
+        {
+            await _unitOfWork.GetRepositories<Credential>().Add(picture);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return picture.Url;
     }
 
-    public async Task<IEnumerable<SurgeryDTO>> ViewSurgeries(string doctorUsername)
+    public async Task<bool> DeleteCredentialAsync(int id)
+{
+    var credential = await _unitOfWork.GetRepositories<Credential>()
+        .Get()
+        .Where(c => c.CredentialID == id)
+        .FirstOrDefaultAsync();
+
+    if (credential == null)
     {
-        var surgeries = await _unitOfWork.GetRepositories<Surgery>()
+            return false;
+    }
+
+    await _unitOfWork.GetRepositories<Credential>().Delete(credential);
+    return true;
+}
+
+    public async Task<IEnumerable<Credential>> GetCredentialsAsync(string username)
+    {
+        return await _unitOfWork.GetRepositories<Credential>()
             .Get()
-            .Include(s => s.Patient)
-            .Where(s => s.Patient.Username == doctorUsername)
+            .Where(c => c.Doctor.Username == username)
             .ToListAsync();
-
-        return _mapper.Map<IEnumerable<SurgeryDTO>>(surgeries);
     }
 
-    public async Task<bool> ScheduleSurgery(string doctorUsername, SurgeryDTO surgeryDTO)
-    {
-        var doctor = await _unitOfWork.GetRepositories<Doctor>()
-            .Get()
-            .FirstOrDefaultAsync(d => d.Username == doctorUsername);
 
-        if (doctor == null) return false;
 
-        var surgery = _mapper.Map<Surgery>(surgeryDTO);
-        surgery.SurgeonID = doctor.Id;
 
-        await _unitOfWork.GetRepositories<Surgery>().Add(surgery);
-        return true;
-    }
-
-    public async Task<bool> UpdateSurgery(int surgeryId, SurgeryDTO surgeryDTO)
+    public Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<bool> CancelSurgery(int surgeryId)
-    {
-        var surgery = await _unitOfWork.GetRepositories<Surgery>()
-            .Get()
-            .FirstOrDefaultAsync(s => s.OperationID == surgeryId);
-
-        if (surgery == null) return false;
-
-        await _unitOfWork.GetRepositories<Surgery>().Delete(surgery);
-        return true;
-    }
-
-    public async Task<IEnumerable<DocumentDTO>> ViewDocuments(string doctorUsername)
+    public Task<bool> SnoozeDoctorAppointments(string doctorUsername, int minutes)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<DocumentDTO> UploadDocument(string doctorUsername, DocumentDTO documentDTO)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> DeleteDocument(int documentId)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<AvaliabilityDTO> AddDoctorAvailability(int availabilityId, AvaliabilityDTO availabilityDTO)
+    public Task<bool> MoveAppointment(int appointmentId)
     {
         throw new NotImplementedException();
     }

@@ -7,9 +7,10 @@ namespace Data.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int VaccinationID { get; set; }
-        [ForeignKey("PatientID")]         
-        public int PatientID { get; set; } 
-        public Patient? Patient { get; set; }
+        [ForeignKey("ChildID")]         
+        public int ChildID { get; set; } 
+        public Child? Child { get; set; }
+
         public string Name { get; set; }
         public DateTime AdministeredDate { get; set; }
         public string Description { get; set; }

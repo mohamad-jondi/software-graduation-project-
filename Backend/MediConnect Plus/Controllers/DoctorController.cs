@@ -1,64 +1,69 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// File: C:\Users\moham\Desktop\software\Backend\MediConnect Plus\Controllers\DoctorController.cs
 using Domain.DTOs;
 using Domain.IServices;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Data.enums;
 using Domain.DTOs.Cases;
+using Data.enums;
 using Domain.DTOs.Patient;
+using Domain.DTOs.Appointment;
+using Data.Models;
 
 [ApiController]
 [Route("api/[controller]")]
 public class DoctorController : ControllerBase
 {
     private readonly IDoctorService _doctorService;
+    private readonly IPictureService _pictureService;
 
-    public DoctorController(IDoctorService doctorService)
+    public DoctorController(IDoctorService doctorService, IPictureService pictureService)
     {
         _doctorService = doctorService;
+        _pictureService = pictureService;
     }
 
     [HttpGet("accepted-appointments/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAcceptedAppointments(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<AppointmentForShowDTO>>> GetAcceptedAppointments(string doctorUsername)
     {
-        var appointments = await _doctorService.GetAccpetedAppointments(doctorUsername);
+        var appointments = await _doctorService.GetAcceptedAppointments(doctorUsername);
         return Ok(appointments);
     }
 
     [HttpGet("pending-appointments/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetPendingAppointments(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<AppointmentForShowDTO>>> GetPendingAppointments(string doctorUsername)
     {
         var appointments = await _doctorService.GetPendingAppointments(doctorUsername);
         return Ok(appointments);
     }
 
-    [HttpPut("manage-appointment/{appointmentId}")]
-    public async Task<IActionResult> ManageAppointment(int appointmentId, [FromBody] AppointmentDTO appointmentDTO)
+    [HttpPut("manage-appointment")]
+    public async Task<IActionResult> ManageAppointment([FromBody] AppointmentMangmentDTO appointmentDTO)
     {
-        var result = await _doctorService.ManageAppointment(appointmentId, appointmentDTO);
+        var result = await _doctorService.ManageAppointment( appointmentDTO);
         if (result)
             return Ok();
         return BadRequest();
     }
 
     [HttpGet("availability/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<AvaliabilityDTO>>> GetDoctorAvailability(string doctorUsername)
+    public async Task<ActionResult<IEnumerable<DoctorAvaliabilityWithAppointmentsDTO>>> GetDoctorAvailability(string doctorUsername)
     {
         var availabilities = await _doctorService.GetDoctorAvailability(doctorUsername);
         return Ok(availabilities);
     }
 
     [HttpDelete("availability/{availabilityId}")]
-    public async Task<IActionResult> DeleteDoctorAvailability(int availabilityId, [FromBody] AvaliabilityDTO availabilityDTO)
+    public async Task<IActionResult> DeleteDoctorAvailability(int availabilityId)
     {
-        var result = await _doctorService.DeleteDoctorAvailability(availabilityId, availabilityDTO);
+        var result = await _doctorService.DeleteDoctorAvailability(availabilityId);
         if (result)
             return Ok();
         return BadRequest();
     }
 
     [HttpPost("availability/{doctorUsername}")]
-    public async Task<ActionResult<AvaliabilityDTO>> AddDoctorAvailability(int doctorUsername, [FromBody] AvaliabilityDTO availabilityDTO)
+    public async Task<ActionResult<AvaliabilityDTO>> AddDoctorAvailability(string doctorUsername, [FromBody] AvaliabilityDTO availabilityDTO)
     {
         var availability = await _doctorService.AddDoctorAvailability(doctorUsername, availabilityDTO);
         if (availability != null)
@@ -75,15 +80,6 @@ public class DoctorController : ControllerBase
         return BadRequest();
     }
 
-    [HttpPut("availability-range/{availabilityId}")]
-    public async Task<ActionResult<IEnumerable<AvaliabilityDTO>>> UpdateRangeDoctorAvailability(int availabilityId, [FromBody] IEnumerable<AvaliabilityDTO> availabilityDTOs)
-    {
-        var availabilities = await _doctorService.UpdateRangeDoctorAvailability(availabilityId, availabilityDTOs);
-        if (availabilities != null)
-            return Ok(availabilities);
-        return BadRequest();
-    }
-
     [HttpGet("patient-history/{patientUsername}")]
     public async Task<ActionResult<PatientFullDTO>> ViewPatientHistory(string patientUsername)
     {
@@ -93,40 +89,45 @@ public class DoctorController : ControllerBase
         return BadRequest();
     }
 
-    [HttpGet("patient-documents/{patientUsername}")]
-    public async Task<ActionResult<IEnumerable<DocumentDTO>>> ViewPatientDocuments(string patientUsername)
+    [HttpGet("credential/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<Credential>>> ViewPatientDocuments(string doctorUsername)
     {
-        var documents = await _doctorService.ViewPatientDocuments(patientUsername);
+        var documents = await _doctorService.GetCredentialsAsync(doctorUsername);
         if (documents != null)
             return Ok(documents);
         return BadRequest();
     }
 
-    [HttpPut("credential/{doctorUsername}")]
-    public async Task<ActionResult<CredentialDTO>> UpdateDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    [HttpDelete("credential/{id}")]
+    public async Task<IActionResult> DeleteDoctorCredential(int id)
     {
-        var credential = await _doctorService.UpdateDoctorCredential(doctorUsername, doctorCredential);
-        if (credential != null)
-            return Ok(credential);
-        return BadRequest();
-    }
-
-    [HttpDelete("credential/{doctorUsername}")]
-    public async Task<IActionResult> DeleteDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
-    {
-        var result = await _doctorService.DeleteDoctorCredential(doctorUsername, doctorCredential);
+        var result = await _doctorService.DeleteCredentialAsync( id);
         if (result)
             return Ok();
         return BadRequest();
     }
 
+
     [HttpPost("credential/{doctorUsername}")]
-    public async Task<ActionResult<CredentialDTO>> AddDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    public async Task<ActionResult> uploadDocument(string doctorUsername, [FromBody] ImageUploadRequestDTO request)
     {
-        var credential = await _doctorService.AddDoctorCredential(doctorUsername, doctorCredential);
-        if (credential != null)
-            return Ok(credential);
-        return BadRequest();
+        try
+        {
+            if (request == null || string.IsNullOrEmpty(request.Base64Image))
+            {
+                return BadRequest("Invalid image data");
+            }
+
+            // Decode the base64 string to byte array
+            var imageData = Convert.FromBase64String(request.Base64Image);
+
+            var pictureUrl = await _doctorService.SaveCredintailsAsync(doctorUsername, request.FileName, imageData);
+            return Ok(new { Url = pictureUrl });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpPut("work-type/{doctorUsername}")]
@@ -145,105 +146,22 @@ public class DoctorController : ControllerBase
         return Ok(cases);
     }
 
-    [HttpPut("manage-case/{caseId}")]
-    public async Task<IActionResult> ManageCase(int caseId, [FromBody] CaseDTO caseDTO)
+   
+    [HttpPut("snooze-appointments/{doctorUsername}")]
+    public async Task<IActionResult> SnoozeAppointments(string doctorUsername, [FromQuery] int minutes)
     {
-        var result = await _doctorService.ManageCase(caseId, caseDTO);
+        var result = await _doctorService.SnoozeDoctorAppointments(doctorUsername, minutes);
         if (result)
             return Ok();
-        return BadRequest();
+        return BadRequest("Failed to snooze appointments.");
     }
 
-    [HttpGet("tests/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<TestDTO>>> GetTests(string doctorUsername)
+    [HttpPut("move-appointment/{appointmentId}")]
+    public async Task<IActionResult> MoveAppointment(int appointmentId)
     {
-        var tests = await _doctorService.GetTests(doctorUsername);
-        return Ok(tests);
-    }
-
-    [HttpPost("test/{doctorUsername}")]
-    public async Task<ActionResult<TestDTO>> AddTest(string doctorUsername, [FromBody] TestDTO testDTO)
-    {
-        var test = await _doctorService.AddTest(doctorUsername, testDTO);
-        if (test != null)
-            return Ok(test);
-        return BadRequest();
-    }
-
-    [HttpPut("test-status/{testId}")]
-    public async Task<IActionResult> UpdateTestStatus(int testId, [FromBody] TestStatus status)
-    {
-        var result = await _doctorService.UpdateTestStatus(testId, status);
+        var result = await _doctorService.MoveAppointment(appointmentId);
         if (result)
             return Ok();
-        return BadRequest();
-    }
-
-    [HttpDelete("test/{testId}")]
-    public async Task<IActionResult> DeleteTest(int testId)
-    {
-        var result = await _doctorService.DeleteTest(testId);
-        if (result)
-            return Ok();
-        return BadRequest();
-    }
-
-    [HttpGet("surgeries/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<SurgeryDTO>>> ViewSurgeries(string doctorUsername)
-    {
-        var surgeries = await _doctorService.ViewSurgeries(doctorUsername);
-        return Ok(surgeries);
-    }
-
-    [HttpPost("surgery/{doctorUsername}")]
-    public async Task<IActionResult> ScheduleSurgery(string doctorUsername, [FromBody] SurgeryDTO surgeryDTO)
-    {
-        var result = await _doctorService.ScheduleSurgery(doctorUsername, surgeryDTO);
-        if (result)
-            return Ok();
-        return BadRequest();
-    }
-
-    [HttpPut("surgery/{surgeryId}")]
-    public async Task<IActionResult> UpdateSurgery(int surgeryId, [FromBody] SurgeryDTO surgeryDTO)
-    {
-        var result = await _doctorService.UpdateSurgery(surgeryId, surgeryDTO);
-        if (result)
-            return Ok();
-        return BadRequest();
-    }
-
-    [HttpDelete("surgery/{surgeryId}")]
-    public async Task<IActionResult> CancelSurgery(int surgeryId)
-    {
-        var result = await _doctorService.CancelSurgery(surgeryId);
-        if (result)
-            return Ok();
-        return BadRequest();
-    }
-
-    [HttpGet("documents/{doctorUsername}")]
-    public async Task<ActionResult<IEnumerable<DocumentDTO>>> ViewDocuments(string doctorUsername)
-    {
-        var documents = await _doctorService.ViewDocuments(doctorUsername);
-        return Ok(documents);
-    }
-
-    [HttpPost("document/{doctorUsername}")]
-    public async Task<ActionResult<DocumentDTO>> UploadDocument(string doctorUsername, [FromBody] DocumentDTO documentDTO)
-    {
-        var document = await _doctorService.UploadDocument(doctorUsername, documentDTO);
-        if (document != null)
-            return Ok(document);
-        return BadRequest();
-    }
-
-    [HttpDelete("document/{documentId}")]
-    public async Task<IActionResult> DeleteDocument(int documentId)
-    {
-        var result = await _doctorService.DeleteDocument(documentId);
-        if (result)
-            return Ok();
-        return BadRequest();
+        return BadRequest("Failed to move the appointment.");
     }
 }

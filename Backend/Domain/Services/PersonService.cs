@@ -2,6 +2,7 @@
 using Data.enums;
 using Data.Interfaces;
 using Data.Models;
+using Domain.DTOs;
 using Domain.DTOs.Person;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -58,9 +59,11 @@ namespace Domain.Services
                 existingUser.Id = 0;
                 if (personTypeDTO.PersonType == PersonType.Patient) await _context.GetRepositories<Patient>().Add(_mapper.Map<Patient>(existingUser));
                 if (personTypeDTO.PersonType == PersonType.Doctor) await _context.GetRepositories<Doctor>().Add(_mapper.Map<Doctor>(existingUser));
-                //if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Nurse) await _context.GetRepositories<Nurse>().Add(_mapper.Map<Nurse>(existingUser));
+                if (personTypeDTO.PersonType == PersonType.Mother) await _context.GetRepositories<Mother>().Add(_mapper.Map<Mother>(existingUser));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return null;
             }
@@ -76,12 +79,17 @@ namespace Domain.Services
             if (infoUpdate.LatestRecordedWeight.HasValue) existingUser.LatestRecordedWeight = infoUpdate.LatestRecordedWeight.Value;
             if (infoUpdate.LatestRecordedHeight.HasValue) existingUser.LatestRecordedHeight = infoUpdate.LatestRecordedHeight.Value;
             if (!infoUpdate.MaritalStatus.IsNullOrEmpty()) existingUser.MaritalStatus= infoUpdate.MaritalStatus;
-            if (!infoUpdate.Occupation.IsNullOrEmpty()) existingUser.Occupation= infoUpdate.Occupation;
-            existingUser.Gender = infoUpdate.Gender;
+            if (!infoUpdate.Occupation.IsNullOrEmpty()) existingUser.Occupation = infoUpdate.Occupation;
+            if (!infoUpdate.Name.IsNullOrEmpty()) existingUser.Name= infoUpdate.Name;
+            if (!infoUpdate.Email.IsNullOrEmpty()) existingUser.Email= infoUpdate.Email;
+            if (!infoUpdate.PhoneNumber.IsNullOrEmpty()) existingUser.PhoneNumber= infoUpdate.PhoneNumber;
+
+        existingUser.Gender = infoUpdate.Gender;
             await _context.GetRepositories<Person>().Update(existingUser);
             var temp = _mapper.Map<PersonDTO>(existingUser);
             temp.Age = (DateTime.Now - temp.DateOfBirth).TotalDays / 365.25;
             return temp;
         }
+        
     }
 }

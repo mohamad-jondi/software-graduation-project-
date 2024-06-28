@@ -92,6 +92,15 @@ namespace Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CanceledReson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ChildID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -102,17 +111,43 @@ namespace Data.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PatientId")
+                    b.Property<int?>("DoctorId1")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DoctorNotes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MotherId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("NurseId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int?>("caseID")
+                        .HasColumnType("int");
+
                     b.HasKey("AppointmentId");
+
+                    b.HasIndex("ChildID");
 
                     b.HasIndex("DoctorId");
 
+                    b.HasIndex("DoctorId1");
+
+                    b.HasIndex("MotherId");
+
+                    b.HasIndex("NurseId");
+
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("caseID");
 
                     b.ToTable("Appointments");
                 });
@@ -143,39 +178,6 @@ namespace Data.Migrations
                     b.ToTable("Avaliabilities");
                 });
 
-            modelBuilder.Entity("Data.Models.Callender", b =>
-                {
-                    b.Property<int>("CallenderID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("CallenderID");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PersonID");
-
-                    b.ToTable("Callender");
-                });
-
             modelBuilder.Entity("Data.Models.Case", b =>
                 {
                     b.Property<int>("CaseId")
@@ -187,11 +189,13 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ChildID")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Diagnosis")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DoctorId")
@@ -203,25 +207,19 @@ namespace Data.Migrations
                     b.Property<DateTime?>("NextAppointmentDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("NurseID")
+                    b.Property<int?>("NurseID")
                         .HasColumnType("int");
 
-                    b.Property<int>("PatientID")
+                    b.Property<int?>("PatientID")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TreatmentPlan")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("CaseId");
+
+                    b.HasIndex("ChildID");
 
                     b.HasIndex("DoctorId");
 
@@ -293,6 +291,39 @@ namespace Data.Migrations
                     b.ToTable("ChatMessages");
                 });
 
+            modelBuilder.Entity("Data.Models.Child", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("LatestRecordedHeight")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("LatestRecordedWeight")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MotherId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MotherId");
+
+                    b.ToTable("Children");
+                });
+
             modelBuilder.Entity("Data.Models.Credential", b =>
                 {
                     b.Property<int>("CredentialID")
@@ -300,16 +331,20 @@ namespace Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("CredentialType")
+                    b.Property<byte[]>("Data")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CredentialValue")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int>("DoctorID")
                         .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CredentialID");
 
@@ -380,40 +415,67 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Models.Documents", b =>
                 {
-                    b.Property<long>("DocumentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("CaseId")
+                    b.Property<int>("CaseID")
                         .HasColumnType("int");
 
-                    b.Property<byte[]>("FileData")
+                    b.Property<byte[]>("Data")
                         .IsRequired()
-                        .HasMaxLength(26214400)
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("UserID")
-                        .HasColumnType("bigint");
 
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("DocumentId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("CaseId");
+                    b.HasIndex("CaseID");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("Data.Models.Drug", b =>
+                {
+                    b.Property<int>("DrugID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("CaseID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DrugDosageTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Duration")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuantityConsumed")
+                        .HasColumnType("int");
+
+                    b.HasKey("DrugID");
+
+                    b.HasIndex("CaseID");
+
+                    b.ToTable("Drug");
                 });
 
             modelBuilder.Entity("Data.Models.JWTTokensRefresh", b =>
@@ -504,9 +566,39 @@ namespace Data.Migrations
                     b.ToTable("MedicalSecondOpinions");
                 });
 
-            modelBuilder.Entity("Data.Models.Operation", b =>
+            modelBuilder.Entity("Data.Models.Picture", b =>
                 {
-                    b.Property<int>("OperationID")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Picture");
+                });
+
+            modelBuilder.Entity("Data.Models.Symptoms", b =>
+                {
+                    b.Property<int>("SymptomID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
@@ -518,28 +610,67 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("OperationName")
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("WhenDidItStart")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SymptomID");
+
+                    b.HasIndex("CaseId");
+
+                    b.ToTable("Symptoms");
+                });
+
+            modelBuilder.Entity("Data.Models.Test", b =>
+                {
+                    b.Property<int>("TestID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("CaseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DateCompleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateRequested")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PatientID")
                         .HasColumnType("int");
 
-                    b.Property<int>("SurgeonID")
+                    b.Property<string>("Results")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("SurgeryDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("TestName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("OperationID");
+                    b.HasKey("TestID");
 
                     b.HasIndex("CaseId");
 
                     b.HasIndex("PatientID");
 
-                    b.HasIndex("SurgeonID");
-
-                    b.ToTable("Operations");
+                    b.ToTable("Test");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>
@@ -572,11 +703,6 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("ProfilePicture")
-                        .IsRequired()
-                        .HasMaxLength(26214400)
-                        .HasColumnType("varbinary(max)");
-
                     b.Property<string>("RandomStringEmailConfirmations")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -606,6 +732,9 @@ namespace Data.Migrations
                     b.Property<DateTime>("AdministeredDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("ChildID")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -614,7 +743,7 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PatientID")
+                    b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
                     b.Property<int>("ShotsLeft")
@@ -625,7 +754,9 @@ namespace Data.Migrations
 
                     b.HasKey("VaccinationID");
 
-                    b.HasIndex("PatientID");
+                    b.HasIndex("ChildID");
+
+                    b.HasIndex("PatientId");
 
                     b.ToTable("Vaccinations");
                 });
@@ -639,6 +770,9 @@ namespace Data.Migrations
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("bit");
 
                     b.Property<double?>("LatestRecordedHeight")
                         .HasColumnType("float");
@@ -657,6 +791,9 @@ namespace Data.Migrations
                     b.Property<int>("PersonType")
                         .HasColumnType("int");
 
+                    b.Property<bool>("isVerifedDoctor")
+                        .HasColumnType("bit");
+
                     b.HasDiscriminator().HasValue("Person");
                 });
 
@@ -672,6 +809,13 @@ namespace Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("Doctor");
+                });
+
+            modelBuilder.Entity("Data.Models.Mother", b =>
+                {
+                    b.HasBaseType("Data.Models.Person");
+
+                    b.HasDiscriminator().HasValue("Mother");
                 });
 
             modelBuilder.Entity("Data.Models.Nurse", b =>
@@ -715,21 +859,43 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Models.Appointment", b =>
                 {
+                    b.HasOne("Data.Models.Child", "childPAtient")
+                        .WithMany("Appointments")
+                        .HasForeignKey("ChildID");
+
                     b.HasOne("Data.Models.Doctor", "Doctor")
-                        .WithMany()
+                        .WithMany("Appointment")
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Data.Models.Doctor", null)
+                        .WithMany("CallenderAppointments")
+                        .HasForeignKey("DoctorId1");
+
+                    b.HasOne("Data.Models.Mother", null)
+                        .WithMany("CallenderAppointments")
+                        .HasForeignKey("MotherId");
+
+                    b.HasOne("Data.Models.Nurse", null)
+                        .WithMany("CallenderAppointments")
+                        .HasForeignKey("NurseId");
+
                     b.HasOne("Data.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("CallenderAppointments")
+                        .HasForeignKey("PatientId");
+
+                    b.HasOne("Data.Models.Case", "Case")
+                        .WithMany("Appointments")
+                        .HasForeignKey("caseID");
+
+                    b.Navigation("Case");
 
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
+
+                    b.Navigation("childPAtient");
                 });
 
             modelBuilder.Entity("Data.Models.Avaliability", b =>
@@ -743,23 +909,12 @@ namespace Data.Migrations
                     b.Navigation("Doctor");
                 });
 
-            modelBuilder.Entity("Data.Models.Callender", b =>
-                {
-                    b.HasOne("Data.Models.Doctor", null)
-                        .WithMany("Callender")
-                        .HasForeignKey("DoctorId");
-
-                    b.HasOne("Data.Models.Person", "Patient")
-                        .WithMany("CallenderAppointments")
-                        .HasForeignKey("PersonID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Patient");
-                });
-
             modelBuilder.Entity("Data.Models.Case", b =>
                 {
+                    b.HasOne("Data.Models.Child", "Child")
+                        .WithMany("Cases")
+                        .HasForeignKey("ChildID");
+
                     b.HasOne("Data.Models.Doctor", "Doctor")
                         .WithMany("Cases")
                         .HasForeignKey("DoctorId")
@@ -768,15 +923,13 @@ namespace Data.Migrations
 
                     b.HasOne("Data.Models.Nurse", "Nurse")
                         .WithMany()
-                        .HasForeignKey("NurseID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("NurseID");
 
                     b.HasOne("Data.Models.Patient", "Patient")
                         .WithMany("cases")
-                        .HasForeignKey("PatientID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PatientID");
+
+                    b.Navigation("Child");
 
                     b.Navigation("Doctor");
 
@@ -817,6 +970,17 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Chat");
+                });
+
+            modelBuilder.Entity("Data.Models.Child", b =>
+                {
+                    b.HasOne("Data.Models.Mother", "Parent")
+                        .WithMany("childrens")
+                        .HasForeignKey("MotherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("Data.Models.Credential", b =>
@@ -874,15 +1038,28 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Models.Documents", b =>
                 {
-                    b.HasOne("Data.Models.Case", null)
+                    b.HasOne("Data.Models.Case", "Case")
                         .WithMany("RelatedDocuments")
-                        .HasForeignKey("CaseId");
+                        .HasForeignKey("CaseID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("Data.Models.User", "User")
+                    b.HasOne("Data.Models.User", null)
                         .WithMany("RelatedDocumtents")
                         .HasForeignKey("UserId");
 
-                    b.Navigation("User");
+                    b.Navigation("Case");
+                });
+
+            modelBuilder.Entity("Data.Models.Drug", b =>
+                {
+                    b.HasOne("Data.Models.Case", "Case")
+                        .WithMany("Drugs")
+                        .HasForeignKey("CaseID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Case");
                 });
 
             modelBuilder.Entity("Data.Models.JWTTokensRefresh", b =>
@@ -926,10 +1103,28 @@ namespace Data.Migrations
                     b.Navigation("ReviewingDoctor");
                 });
 
-            modelBuilder.Entity("Data.Models.Operation", b =>
+            modelBuilder.Entity("Data.Models.Picture", b =>
+                {
+                    b.HasOne("Data.Models.User", "User")
+                        .WithOne("picture")
+                        .HasForeignKey("Data.Models.Picture", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Models.Symptoms", b =>
                 {
                     b.HasOne("Data.Models.Case", null)
-                        .WithMany("RelatedOperations")
+                        .WithMany("symptoms")
+                        .HasForeignKey("CaseId");
+                });
+
+            modelBuilder.Entity("Data.Models.Test", b =>
+                {
+                    b.HasOne("Data.Models.Case", null)
+                        .WithMany("Tests")
                         .HasForeignKey("CaseId");
 
                     b.HasOne("Data.Models.Patient", "Patient")
@@ -938,40 +1133,51 @@ namespace Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Data.Models.Doctor", "Surgeon")
-                        .WithMany()
-                        .HasForeignKey("SurgeonID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Patient");
-
-                    b.Navigation("Surgeon");
                 });
 
             modelBuilder.Entity("Data.Models.Vaccination", b =>
                 {
-                    b.HasOne("Data.Models.Patient", "Patient")
-                        .WithMany("Vaccinations")
-                        .HasForeignKey("PatientID")
+                    b.HasOne("Data.Models.Child", "Child")
+                        .WithMany("Vaccination")
+                        .HasForeignKey("ChildID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Patient");
+                    b.HasOne("Data.Models.Patient", null)
+                        .WithMany("Vaccinations")
+                        .HasForeignKey("PatientId");
+
+                    b.Navigation("Child");
                 });
 
             modelBuilder.Entity("Data.Models.Case", b =>
                 {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("Drugs");
+
                     b.Navigation("RelatedDocuments");
 
-                    b.Navigation("RelatedOperations");
-
                     b.Navigation("SecondOpinionRequests");
+
+                    b.Navigation("Tests");
+
+                    b.Navigation("symptoms");
                 });
 
             modelBuilder.Entity("Data.Models.Chat", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Data.Models.Child", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("Cases");
+
+                    b.Navigation("Vaccination");
                 });
 
             modelBuilder.Entity("Data.Models.User", b =>
@@ -981,20 +1187,23 @@ namespace Data.Migrations
                     b.Navigation("Chats");
 
                     b.Navigation("RelatedDocumtents");
+
+                    b.Navigation("picture")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Data.Models.Person", b =>
                 {
-                    b.Navigation("CallenderAppointments");
-
                     b.Navigation("EmergencyContactInfo");
                 });
 
             modelBuilder.Entity("Data.Models.Doctor", b =>
                 {
+                    b.Navigation("Appointment");
+
                     b.Navigation("Avalible");
 
-                    b.Navigation("Callender");
+                    b.Navigation("CallenderAppointments");
 
                     b.Navigation("Cases");
 
@@ -1003,9 +1212,23 @@ namespace Data.Migrations
                     b.Navigation("credential");
                 });
 
+            modelBuilder.Entity("Data.Models.Mother", b =>
+                {
+                    b.Navigation("CallenderAppointments");
+
+                    b.Navigation("childrens");
+                });
+
+            modelBuilder.Entity("Data.Models.Nurse", b =>
+                {
+                    b.Navigation("CallenderAppointments");
+                });
+
             modelBuilder.Entity("Data.Models.Patient", b =>
                 {
                     b.Navigation("Allergies");
+
+                    b.Navigation("CallenderAppointments");
 
                     b.Navigation("EmergancyContact");
 

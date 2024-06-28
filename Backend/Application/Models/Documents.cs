@@ -1,20 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace Data.Models
 {
-    public class Documents
+    public class Documents : BaseEntity
     {
-        public string Type { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Key]
-        public long DocumentId { get; set; }
-        [ForeignKey("UserID")]
-        public int UserID { get; set; }
-        public User? User{ get; set; }
+        public int Id { get; set; }
         public string FileName { get; set; }
-        [Required]
-        [MaxLength(25 * 1024 * 1024)]
-        public byte[] FileData { get; set; }
+        public byte[] Data { get; set; }
+        public string Url { get; set; }
+
+        [ForeignKey("CaseID")]
+        public int CaseID { get; set; }
+        public Case Case { get; set; }
     }
 }

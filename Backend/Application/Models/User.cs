@@ -17,10 +17,8 @@ namespace Data.Models
         public string RandomStringEmailConfirmations { get; set; }
         public ICollection<Address> Addresses { get; set; }
         public ICollection<Documents> RelatedDocumtents { get; set; }
-
         public ICollection<Chat> Chats{ get; set; }
-        [MaxLength(25 * 1024 * 1024)]
-        public byte[] ProfilePicture { get; set; }
+        public Picture picture { get; set; }
     }
 
 }

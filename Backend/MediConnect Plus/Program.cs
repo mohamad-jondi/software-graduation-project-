@@ -16,7 +16,6 @@ namespace MediConnect_Plus
 {
     public class Program
     {
-
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -37,18 +36,24 @@ namespace MediConnect_Plus
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<IDoctorService, DoctorService>();
             builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<IPictureService, PictureService>();
+            builder.Services.AddScoped<IMotherService, MotherService>();
+            builder.Services.AddScoped<ITestService, TestService>();
+            builder.Services.AddScoped<ICaseService, CaseService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
+
             builder.Services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.AddSerilog();
             });
-            Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .Enrich.FromLogContext()
-            .WriteTo.File("logs/myapp-.txt")
-            .CreateLogger();
 
-            
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.File("logs/myapp-.txt")
+                .CreateLogger();
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -65,8 +70,8 @@ namespace MediConnect_Plus
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTToken:Key"]))
                 };
             });
-            builder.Services.AddAuthorization();
 
+            builder.Services.AddAuthorization();
 
             builder.Services.AddSwaggerGen(c =>
             {
@@ -89,14 +94,20 @@ namespace MediConnect_Plus
                 };
                 c.AddSecurityDefinition("Bearer", securityScheme);
                 var securityRequirement = new OpenApiSecurityRequirement
-    {
-        { securityScheme, new[] { "Bearer" } }
-    };
+                {
+                    { securityScheme, new[] { "Bearer" } }
+                };
                 c.AddSecurityRequirement(securityRequirement);
             });
+
             var app = builder.Build();
 
-
+            // Ensure the WebRootPath is set
+            var webRootPath = app.Environment.WebRootPath;
+            if (string.IsNullOrEmpty(webRootPath))
+            {
+                throw new InvalidOperationException("WebRootPath is not set.");
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -105,10 +116,11 @@ namespace MediConnect_Plus
                 app.UseSwaggerUI();
             }
 
+            app.UseStaticFiles();
+
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

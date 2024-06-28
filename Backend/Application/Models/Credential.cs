@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models
 {
@@ -7,11 +6,9 @@ namespace Data.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CredentialID { get; set; }
-        [Required]
-        public string CredentialType { get; set; }
-
-        [Required]
-        public string CredentialValue { get; set; }
+        public string FileName { get; set; }
+        public byte[] Data { get; set; }
+        public string Url { get; set; }
 
         [ForeignKey("DoctorID")]
         public int DoctorID { get; set; }

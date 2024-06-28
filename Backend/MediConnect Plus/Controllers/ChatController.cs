@@ -39,6 +39,14 @@ public class ChatController : ControllerBase
             return Ok(message);
         return BadRequest("Failed to send message.");
     }
+    [HttpPost("chat/messages/{messageid}/setChatAsRead")]
+    public async Task<IActionResult> SetChatAsRead(int messageid)
+    {
+        var x= await _chatService.SetChatAsRead(messageid);
+        if (x)
+        return Ok();
+        return BadRequest();
+    }
 
     [HttpDelete("DeleteMessage/{messageId}")]
     public async Task<IActionResult> DeleteMessage(int messageId)

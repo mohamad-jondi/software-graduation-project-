@@ -4,6 +4,7 @@ using Data.Interfaces;
 using Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Login;
+using Domain.DTOs.Person;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Crypto.Generators;
@@ -58,7 +59,7 @@ namespace Domain.Services
             return true;
         }
 
-        public async Task<JWTTokensDTO> Login(LoginDTO Dto)
+        public async Task<PersonDTO> Login(LoginDTO Dto)
         {
            var user =await _unitOfWork.GetRepositories<User>().Get().Where(r=>r.Username == Dto.Username).FirstOrDefaultAsync();
             var hashed_pass = "";
@@ -67,9 +68,14 @@ namespace Domain.Services
                 byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(Dto.Password));
                 hashed_pass = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
             }
-            if (hashed_pass != user.Password) return new JWTTokensDTO { refToken ="",Token="" };
-            var temp = _jWTTokenServices.Authenticate(user).Result;
-            return new JWTTokensDTO { refToken = temp.refToken,Token = temp.Token };
+            if (user == null) return null;
+            if (hashed_pass != user.Password) return null;
+            var x= await _unitOfWork.GetRepositories<Person>().Get().Where(r=> r.Username == Dto.Username).FirstOrDefaultAsync();
+
+            if ((x.PersonType == PersonType.Doctor|| x.PersonType == PersonType.Nurse )&& x.isVerifedDoctor == false) x.isVerifedDoctor = false;
+            else x.isVerifedDoctor=true;
+            return _mapper.Map<PersonDTO>(x);   
+            
         }
 
         public async Task<bool> RecovePasswordRequest(RecoverPasswordRequestDTO passwordRequest)
@@ -126,6 +132,16 @@ namespace Domain.Services
             }
             await _unitOfWork.GetRepositories<User>().Update(x);
             return true;
+        }
+
+        public async Task<bool?> DoesUserGotPic(string username)
+        {
+           var user = await _unitOfWork.GetRepositories<User>().Get().Include(c=> c.picture).Where(c=> c.Username == username).FirstOrDefaultAsync(); 
+           if (user == null) return null;
+
+            if (user.picture == null) return false;
+            else return true;
+
         }
     }
 }

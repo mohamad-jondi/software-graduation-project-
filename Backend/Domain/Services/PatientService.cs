@@ -1,7 +1,6 @@
 ﻿using Data.Models.Data.Models;
 using Domain.DTOs.Doctor;
 using Domain.DTOs.Patient;
-using Domain.DTOs;
 using Domain.IServices;
 using Data.Interfaces;
 using Data.Models;
@@ -11,6 +10,7 @@ using Data.enums;
 using Domain.DTOs.Allergy;
 using Domain.DTOs.Vaccination;
 using Domain.DTOs.LifestyleFactors;
+using Domain.DTOs.Appointment;
 
 namespace Domain.Services
 {
@@ -25,11 +25,18 @@ namespace Domain.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<DoctorForInputDTO>> BrowseDoctors(string? location, string? specialty, string? name)
+        public async Task<IEnumerable<DoctorForBrowsingDTO>> BrowseDoctors(string? location, string? specialty, string? name)
         {
+            // Calculate the start and end dates of the current week
+            var currentDate = DateTime.Now;
+            var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(7).AddTicks(-1);
+
             var doctorsQuery = _unitOfWork.GetRepositories<Doctor>()
                 .Get()
                 .Include(d => d.Addresses)
+                .Include(d => d.Avalible)
+                .Include(d => d.Appointment.Where(a => a.Date >= startOfWeek && a.Date <= endOfWeek))
                 .Where(d =>
                     (string.IsNullOrEmpty(specialty) || d.Specialization == specialty) &&
                     (string.IsNullOrEmpty(name) || d.Name.Contains(name)) &&
@@ -43,7 +50,7 @@ namespace Domain.Services
                 );
 
             var doctors = await doctorsQuery.ToListAsync();
-            return _mapper.Map<IEnumerable<DoctorForInputDTO>>(doctors);
+            return _mapper.Map<IEnumerable<DoctorForBrowsingDTO>>(doctors);
         }
 
         public async Task<bool> AddEmergencyContact(string patientUsername, EmergencyContactInfoDTO emergencyContact)
@@ -75,7 +82,7 @@ namespace Domain.Services
             return true;
         }
 
-        public async Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+        public async Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate, string Description)
         {
             var patient = await _unitOfWork.GetRepositories<Patient>()
                 .Get()
@@ -88,17 +95,39 @@ namespace Domain.Services
             if (patient == null || doctor == null)
                 return false;
 
+            var startTime = appointmentDate.AddMinutes(-59);
+            var endTime = appointmentDate.AddMinutes(59);
+
+            var patientConflict = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .AnyAsync(a => a.PatientId == patient.Id && a.Date >= startTime && a.Date <= endTime);
+
+            if (patientConflict)
+                throw new Exception($"Patient {patientUsername} has an existing appointment within the time range.");
+
+            var doctorConflict = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .AnyAsync(a => a.DoctorId == doctor.Id && a.Date >= startTime && a.Date <= endTime);
+
+            if (doctorConflict)
+                throw new Exception($"Doctor {doctorUsername} has an existing appointment within the time range.");
+
             var appointment = new Appointment
             {
                 Date = appointmentDate,
                 Doctor = doctor,
                 Patient = patient,
-                Status = AppointmentStatus.Pending 
+                Status = AppointmentStatus.Pending,
+                Description = string.IsNullOrEmpty( Description) ? " " : Description,
+                DoctorNotes = " ",
             };
 
             await _unitOfWork.GetRepositories<Appointment>().Add(appointment);
+            // Ensure the changes are saved to the database
+
             return true;
         }
+
 
         public async Task<DoctorForOutputDTO> RequestSecondOpinion(string patientUsername, string doctorUsername, string caseDescription)
         {
@@ -143,10 +172,21 @@ namespace Domain.Services
             var appointments = await _unitOfWork.GetRepositories<Appointment>()
                 .Get()
                 .Include(c=> c.Patient)
-                .Where(a => a.Patient.Username == patientUsername && a.Date >= DateTime.Now && a.Status == AppointmentStatus.Accepted)
+                .Include(c=> c.Doctor)
+                .Where(a => a.Patient.Username == patientUsername )
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            var appointmentDTOs = appointments.Select(appointment => new AppointmentDTO
+            {
+                Date = appointment.Date,
+                Status = appointment.Status.ToString(),
+                Description = appointment.Description,
+                Notes = appointment.DoctorNotes,
+                DoctorName = appointment.Doctor.Name,
+                PatientName = appointment.Patient != null ? appointment.Patient.Name : null
+            }).ToList();
+
+            return appointmentDTOs;
         }
 
         public async Task<AllergyForOutputDTO> AddAllergy(string patientUsername, AllergyDTO allergy)
@@ -204,78 +244,7 @@ namespace Domain.Services
 
             return allergyDTOs;
         }
-
-
-        public async Task<IEnumerable<VaccinationForOutputDTO>> BrowseVaccination(string PatientUsername)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .Include(p => p.Vaccinations)
-                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
-
-            if (patient == null)
-                return Enumerable.Empty<VaccinationForOutputDTO>(); 
-            var vaccinationDTOs = patient.Vaccinations.Select(vaccination => _mapper.Map<VaccinationForOutputDTO>(vaccination));
-
-            return vaccinationDTOs;
-        }
-
-
-        public async Task<VaccinationForOutputDTO> AddVaccination(string PatientUsername, VaccinationDTO vaccination)
-        {
-            var patient = await _unitOfWork.GetRepositories<Patient>()
-                .Get()
-                .FirstOrDefaultAsync(p => p.Username == PatientUsername);
-
-            if (patient == null)
-                return null;
-
-
-            var newAllergy = _mapper.Map<Vaccination>(vaccination);
-            newAllergy.Patient = patient;
-
-            var x = await _unitOfWork.GetRepositories<Vaccination>().Add(newAllergy);
-
-            return _mapper.Map<VaccinationForOutputDTO>(x);
-        }
-
-
-        public async Task<bool> DeleteVaccination(int vaccinationId)
-        {
-            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(c=> c.VaccinationID ==vaccinationId).FirstOrDefaultAsync();
-            if (vaccination == null)
-                return false; 
-
-            await _unitOfWork.GetRepositories<Vaccination>().Delete(vaccination);
-            return true;
-        }
-        public async Task<VaccinationForOutputDTO> UpdateVaccination(int vaccinationId, VaccinationForUpdatingDTO updatedVaccination)
-        {
-            var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v=> v.VaccinationID == vaccinationId).FirstOrDefaultAsync();
-            if (vaccination == null)
-                return null;
-
-            var vaccinationType = typeof(VaccinationForUpdatingDTO);
-            var vaccinationProperties = vaccinationType.GetProperties();
-
-            foreach (var property in vaccinationProperties)
-            {
-                var newValue = property.GetValue(updatedVaccination);
-                if (newValue != null)
-                {
-                    var vaccinationProperty = vaccination.GetType().GetProperty(property.Name);
-                    if (vaccinationProperty != null)
-                    {
-                        vaccinationProperty.SetValue(vaccination, newValue);
-                    }
-                }
-            }
-
-            var x= await _unitOfWork.GetRepositories<Vaccination>().Update(vaccination);
-
-            return _mapper.Map<VaccinationForOutputDTO>(x);
-        }
-
+  
         public async Task<PatientFullDTO> ViewFullDetailsPatient(string patientUsername)
         {
             var patient = await _unitOfWork.GetRepositories<Patient>()

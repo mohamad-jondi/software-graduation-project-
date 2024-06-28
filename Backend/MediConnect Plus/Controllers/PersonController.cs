@@ -12,18 +12,17 @@ namespace Domain.Controllers
     {
         private readonly IPersonService _personService;
         private readonly ILogger _logger;
-
         public PersonController(IPersonService personService, ILogger<PersonController> logger)
         {
             _personService = personService;
             _logger = logger;
         }
         [HttpPost("EditPersonType/{Username}")]
-        public async Task<ActionResult> editPersonType(string Username,personTypeDTO type)
+        public async Task<ActionResult> editPersonType(string Username, personTypeDTO type)
         {
             try
             {
-                var updatedInfo = await _personService.editPersonType(Username,type);
+                var updatedInfo = await _personService.editPersonType(Username, type);
                 if (updatedInfo != null)
                     return Ok(updatedInfo);
                 else
