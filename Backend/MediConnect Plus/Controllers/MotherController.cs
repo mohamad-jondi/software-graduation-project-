@@ -2,6 +2,8 @@
 using Domain.DTOs.Child;
 using Domain.DTOs.Vaccination;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -23,10 +25,55 @@ public class MotherController : ControllerBase
         return BadRequest("Failed to add the child.");
     }
 
+    [HttpPut("{childId}")]
+    public async Task<ActionResult<ChildDTO>> UpdateChildInfo(int childId, [FromBody] ChildDTO childDTO)
+    {
+        var updatedChild = await _motherService.UpdateChildInfo(childId, childDTO);
+        if (updatedChild != null)
+            return Ok(updatedChild);
+        return BadRequest("Failed to update child info.");
+    }
+
+    [HttpGet("child/{childId}")]
+    public async Task<ActionResult<ChildDTO>> GetChildById(int childId)
+    {
+        var child = await _motherService.GetChildByID(childId);
+        if (child != null)
+            return Ok(child);
+        return NotFound("Child not found.");
+    }
+
+    [HttpPost("child/{childId}/vaccination")]
+    public async Task<ActionResult<VaccinationDTO>> AddChildVaccination(int childId, [FromBody] VaccinationDTO vaccinationDTO)
+    {
+        var vaccination = await _motherService.AddChildVacination(childId, vaccinationDTO);
+        if (vaccination != null)
+            return Ok(vaccination);
+        return BadRequest("Failed to add child vaccination.");
+    }
+
+    [HttpDelete("vaccination/{vaccinationId}")]
+    public async Task<IActionResult> DeleteChildVaccination(int vaccinationId)
+    {
+        var result = await _motherService.DeleteChildVacination(vaccinationId);
+        if (result)
+            return Ok();
+        return BadRequest("Failed to delete child vaccination.");
+    }
+
+    [HttpPost("child/{childId}/appointment")]
+    public async Task<ActionResult<AppointmentDTO>> BookAppointment(int childId, [FromBody] AppointmentDTO appointmentDTO)
+    {
+        var appointment = await _motherService.BookAppointment(childId, appointmentDTO.DoctorName, appointmentDTO);
+        if (appointment != null)
+            return Ok(appointment);
+        return BadRequest("Failed to book appointment.");
+    }
+
     [HttpPut("vaccination")]
     public async Task<ActionResult<bool>> ManageChildVaccination([FromBody] VaccinationForUpdatingDTO vaccinationDTO)
     {
-        var result = await _motherService.UpdateChildVaccinationAsync( vaccinationDTO);
+        var result = await _motherService.UpdateChildVaccinationAsync(vaccinationDTO);
         if (result)
             return Ok();
         return BadRequest("Failed to manage the vaccination.");
@@ -47,5 +94,4 @@ public class MotherController : ControllerBase
         var children = await _motherService.GetChildrenAsync(motherUsername);
         return Ok(children);
     }
-
 }

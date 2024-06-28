@@ -15,7 +15,7 @@ public class PictureController : ControllerBase
     }
 
     [HttpPost("upload/{username}")]
-    public async Task<ActionResult> UploadPicture(string username ,[FromBody] ImageUploadRequestDTO request)
+    public async Task<ActionResult> UploadPicture(string username, [FromBody] ImageUploadRequestDTO request)
     {
         try
         {
@@ -27,7 +27,7 @@ public class PictureController : ControllerBase
             // Decode the base64 string to byte array
             var imageData = Convert.FromBase64String(request.Base64Image);
 
-            var pictureUrl = await _pictureService.SavePictureAsync(username ,request.FileName, imageData);
+            var pictureUrl = await _pictureService.SavePictureAsync(username, request.FileName, imageData);
             return Ok(new { Url = pictureUrl });
         }
         catch (Exception ex)
@@ -37,6 +37,7 @@ public class PictureController : ControllerBase
         }
     }
 
+   
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPicture(int id)
     {

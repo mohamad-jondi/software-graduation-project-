@@ -70,7 +70,10 @@ namespace Domain.Services
             }
             if (user == null) return null;
             if (hashed_pass != user.Password) return null;
-            var x= await _unitOfWork.GetRepositories<Person>().Get().Where(r=> r.Username == Dto.Username).FirstOrDefaultAsync();    
+            var x= await _unitOfWork.GetRepositories<Person>().Get().Where(r=> r.Username == Dto.Username).FirstOrDefaultAsync();
+
+            if ((x.PersonType == PersonType.Doctor|| x.PersonType == PersonType.Nurse )&& x.isVerifedDoctor == false) x.isVerifedDoctor = false;
+            else x.isVerifedDoctor=true;
             return _mapper.Map<PersonDTO>(x);   
             
         }

@@ -82,7 +82,7 @@ namespace Domain.Services
             return true;
         }
 
-        public async Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+        public async Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate, string Description)
         {
             var patient = await _unitOfWork.GetRepositories<Patient>()
                 .Get()
@@ -95,19 +95,39 @@ namespace Domain.Services
             if (patient == null || doctor == null)
                 return false;
 
+            var startTime = appointmentDate.AddMinutes(-59);
+            var endTime = appointmentDate.AddMinutes(59);
+
+            var patientConflict = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .AnyAsync(a => a.PatientId == patient.Id && a.Date >= startTime && a.Date <= endTime);
+
+            if (patientConflict)
+                throw new Exception($"Patient {patientUsername} has an existing appointment within the time range.");
+
+            var doctorConflict = await _unitOfWork.GetRepositories<Appointment>()
+                .Get()
+                .AnyAsync(a => a.DoctorId == doctor.Id && a.Date >= startTime && a.Date <= endTime);
+
+            if (doctorConflict)
+                throw new Exception($"Doctor {doctorUsername} has an existing appointment within the time range.");
+
             var appointment = new Appointment
             {
                 Date = appointmentDate,
                 Doctor = doctor,
                 Patient = patient,
-                Status = AppointmentStatus.Pending ,
-                Description = " ",
+                Status = AppointmentStatus.Pending,
+                Description = string.IsNullOrEmpty( Description) ? " " : Description,
                 DoctorNotes = " ",
             };
 
             await _unitOfWork.GetRepositories<Appointment>().Add(appointment);
+            // Ensure the changes are saved to the database
+
             return true;
         }
+
 
         public async Task<DoctorForOutputDTO> RequestSecondOpinion(string patientUsername, string doctorUsername, string caseDescription)
         {
@@ -152,10 +172,21 @@ namespace Domain.Services
             var appointments = await _unitOfWork.GetRepositories<Appointment>()
                 .Get()
                 .Include(c=> c.Patient)
-                .Where(a => a.Patient.Username == patientUsername && a.Date >= DateTime.Now && a.Status == AppointmentStatus.Accepted)
+                .Include(c=> c.Doctor)
+                .Where(a => a.Patient.Username == patientUsername )
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            var appointmentDTOs = appointments.Select(appointment => new AppointmentDTO
+            {
+                Date = appointment.Date,
+                Status = appointment.Status.ToString(),
+                Description = appointment.Description,
+                Notes = appointment.DoctorNotes,
+                DoctorName = appointment.Doctor.Name,
+                PatientName = appointment.Patient != null ? appointment.Patient.Name : null
+            }).ToList();
+
+            return appointmentDTOs;
         }
 
         public async Task<AllergyForOutputDTO> AddAllergy(string patientUsername, AllergyDTO allergy)

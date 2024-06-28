@@ -1,4 +1,6 @@
 ﻿using Data.enums;
+using Data.Migrations;
+using Data.Models;
 using Domain.DTOs;
 using Domain.DTOs.Appointment;
 using Domain.DTOs.Cases;
@@ -11,6 +13,10 @@ namespace Domain.IServices
         Task<IEnumerable<AppointmentForShowDTO>> GetAcceptedAppointments(string doctorUsername);
         Task<IEnumerable<AppointmentForShowDTO>> GetPendingAppointments(string doctorUsername);
         Task<bool> ManageAppointment( AppointmentMangmentDTO appointmentDTO);
+
+        Task<string> SaveCredintailsAsync(string username, string fileName, byte[] imageData);
+        Task<bool> DeleteCredentialAsync(int id);
+        Task<IEnumerable<Credential>> GetCredentialsAsync(string username);
         Task<DoctorAvaliabilityWithAppointmentsDTO> GetDoctorAvailability(string doctorUsername);
         Task<bool> DeleteDoctorAvailability(int availabilityId);
         Task<AvaliabilityDTO> AddDoctorAvailability(string doctorUsername, AvaliabilityDTO availabilityDTO);

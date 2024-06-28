@@ -38,11 +38,17 @@ public class PatientController : ControllerBase
     }
 
     [HttpPost("RequestAppointment")]
-    public async Task<IActionResult> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate)
+    public async Task<IActionResult> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate,string Description)
     {
-        var result = await _patientService.RequestAppointment(patientUsername, doctorUsername, appointmentDate);
-        if (result)
-            return Ok("Appointment requested successfully");
+        try
+        {
+            var result = await _patientService.RequestAppointment(patientUsername, doctorUsername, appointmentDate,  Description);
+            if (result)
+                return Ok("Appointment requested successfully");
+        }catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
         return BadRequest("Failed to request appointment");
     }
 

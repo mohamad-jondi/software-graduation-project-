@@ -40,6 +40,7 @@ namespace MediConnect_Plus
             builder.Services.AddScoped<IMotherService, MotherService>();
             builder.Services.AddScoped<ITestService, TestService>();
             builder.Services.AddScoped<ICaseService, CaseService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
             builder.Services.AddLogging(loggingBuilder =>
             {

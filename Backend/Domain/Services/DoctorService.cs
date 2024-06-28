@@ -9,16 +9,18 @@ using Domain.DTOs.Patient;
 using Domain.IServices;
 using Microsoft.EntityFrameworkCore;
 using Domain.DTOs;
+using Microsoft.AspNetCore.Hosting;
 
 public class DoctorService : IDoctorService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-
-    public DoctorService(IUnitOfWork unitOfWork, IMapper mapper)
+    private readonly IWebHostEnvironment _environment;
+    public DoctorService(IUnitOfWork unitOfWork, IMapper mapper,IWebHostEnvironment env)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _environment = env;
     }
 
     public async Task<IEnumerable<AppointmentForShowDTO>> GetAcceptedAppointments(string doctorUsername)
@@ -281,6 +283,70 @@ public class DoctorService : IDoctorService
 
         return true;
     }
+
+
+
+
+
+    public async Task<string> SaveCredintailsAsync(string username, string fileName, byte[] imageData)
+    {
+
+        var user = await _unitOfWork.GetRepositories<Doctor>().Get().Where(c => c.Username == username).FirstOrDefaultAsync();
+
+        if (user == null) { throw new Exception(); }
+
+        var filePath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+        await File.WriteAllBytesAsync(filePath, imageData);
+
+        var picture = new Credential
+        {
+            FileName = fileName,
+            Data = imageData,
+            Url = $"/uploads/{fileName}",
+            Doctor = user
+        };
+
+        try
+        {
+            await _unitOfWork.GetRepositories<Credential>().Add(picture);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return picture.Url;
+    }
+
+    public async Task<bool> DeleteCredentialAsync(int id)
+{
+    var credential = await _unitOfWork.GetRepositories<Credential>()
+        .Get()
+        .Where(c => c.CredentialID == id)
+        .FirstOrDefaultAsync();
+
+    if (credential == null)
+    {
+            return false;
+    }
+
+    await _unitOfWork.GetRepositories<Credential>().Delete(credential);
+    return true;
+}
+
+    public async Task<IEnumerable<Credential>> GetCredentialsAsync(string username)
+    {
+        return await _unitOfWork.GetRepositories<Credential>()
+            .Get()
+            .Where(c => c.Doctor.Username == username)
+            .ToListAsync();
+    }
+
+
+
 
     public Task<bool> UpdateDoctorTypeOfWork(string doctorUsername, DoctorWorkType specializationDTO)
     {

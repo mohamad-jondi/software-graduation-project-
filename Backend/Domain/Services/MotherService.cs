@@ -31,19 +31,6 @@ public class MotherService : IMotherService
         return _mapper.Map<ChildDTO>(x)  ;
     }
 
-    public async Task<bool> UpdateChildVaccinationAsync( VaccinationForUpdatingDTO vaccinationDTO)
-    {
-        var vaccination = await _unitOfWork.GetRepositories<Vaccination>().Get().Where(v=> v.VaccinationID == vaccinationDTO.VaccinationID).FirstOrDefaultAsync();
-        if (vaccination == null) return false;
-        vaccination.Name = string.IsNullOrEmpty(vaccinationDTO.Name) ? vaccination.Name: vaccinationDTO.Name;
-        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
-        vaccination.VaccineStatus = vaccinationDTO.VaccineStatus == null ? vaccination.VaccineStatus : vaccinationDTO.VaccineStatus.Value;
-        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
-        vaccination.ShotsLeft = vaccinationDTO.ShotsLeft ?? vaccination.ShotsLeft;
-
-        return true;
-    }
-
     public async Task<bool> CancelChildAppointmentAsync(int childId, AppointmentCanceltionDTO appointmentDTO)
     {
         var appointment = await _unitOfWork.GetRepositories<Appointment>().Get().Where(v => v.AppointmentId == appointmentDTO.appointmentId).FirstOrDefaultAsync();
@@ -100,6 +87,34 @@ public class MotherService : IMotherService
         
     }
 
+    public async Task<bool> UpdateChildVaccinationAsync(VaccinationForUpdatingDTO vaccinationDTO)
+    {
+        var vaccination = await _unitOfWork.GetRepositories<Vaccination>()
+            .Get()
+            .FirstOrDefaultAsync(v => v.VaccinationID == vaccinationDTO.VaccinationID);
+
+        if (vaccination == null)
+            return false;
+
+        if (!string.IsNullOrEmpty(vaccinationDTO.Name))
+            vaccination.Name = vaccinationDTO.Name;
+
+        if (vaccinationDTO.AdministeredDate.HasValue)
+            vaccination.AdministeredDate = vaccinationDTO.AdministeredDate.Value;
+
+        if (!string.IsNullOrEmpty(vaccinationDTO.Description))
+            vaccination.Description = vaccinationDTO.Description;
+
+        if (vaccinationDTO.VaccineStatus.HasValue)
+            vaccination.VaccineStatus = vaccinationDTO.VaccineStatus.Value;
+
+        if (vaccinationDTO.ShotsLeft.HasValue)
+            vaccination.ShotsLeft = vaccinationDTO.ShotsLeft.Value;
+
+        await _unitOfWork.GetRepositories<Vaccination>().Update(vaccination);
+        return true;
+    }
+
     public async Task<AppointmentDTO> BookAppointment(int ChildID, string DoctorUserName, AppointmentDTO appointment)
     {
         var app = _mapper.Map<Appointment>(appointment);
@@ -108,15 +123,6 @@ public class MotherService : IMotherService
         app.Doctor = doctor;
         return _mapper.Map<AppointmentDTO> (await _unitOfWork.GetRepositories<Appointment>().Add(app));
 
-    }
-    public async Task<IEnumerable<AppointmentDTO>> GetAppointments(string UserName)
-    {
-        var appointments = await _unitOfWork.GetRepositories<Appointment>()
-                                         .Get()
-                                         .Where(c => c.Patient.Username == UserName || c.Doctor.Username == UserName)
-                                         .ToListAsync();
-
-        return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
     }
 
 

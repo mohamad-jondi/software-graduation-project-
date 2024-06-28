@@ -11,7 +11,7 @@ namespace Domain.IServices
     {
         Task<IEnumerable<DoctorForBrowsingDTO>> BrowseDoctors(string? location , string? specialty, string? name);
         Task<bool> AddEmergencyContact(string PatientUsername, EmergencyContactInfoDTO emergencyContact);
-        Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate);
+        Task<bool> RequestAppointment(string patientUsername, string doctorUsername, DateTime appointmentDate, string Description);
         Task<DoctorForOutputDTO> RequestSecondOpinion(string PatientUsername, string DoctorUsername, string caseDescription);
         Task<IEnumerable<AppointmentDTO>> ViewPastAppointments(string PatientUsername);
         Task<IEnumerable<AppointmentDTO>> ViewUpcomingAppointments(string PatientUsername);

@@ -29,11 +29,15 @@ namespace Domain.Mapper
             CreateMap<User, UserDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentDTO>().ReverseMap();
             CreateMap<Appointment, AppointmentForShowDTO>().ReverseMap();
+            CreateMap<Vaccination, VaccinationForUpdatingDTO>().ReverseMap();
+            CreateMap<Doctor, DoctorWithCredinttialsDTO>().ReverseMap();
+            CreateMap<Credential, CredentialForShowDTO>().ReverseMap();
 
             CreateMap<Avaliability, AvaliabilityDTO>().ReverseMap();
             CreateMap<Doctor, DoctorForBrowsingDTO>().ReverseMap();
             CreateMap<Person, Patient>().ReverseMap();
             CreateMap<Person, Doctor>().ReverseMap();
+            CreateMap<Person, Mother>().ReverseMap();
             CreateMap<Patient, PersonDTO>().ReverseMap();
             CreateMap<Person, PersonDTO>().ReverseMap();
             CreateMap<Doctor, PersonDTO>().ReverseMap();

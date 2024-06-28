@@ -8,16 +8,19 @@ using Domain.DTOs.Cases;
 using Data.enums;
 using Domain.DTOs.Patient;
 using Domain.DTOs.Appointment;
+using Data.Models;
 
 [ApiController]
 [Route("api/[controller]")]
 public class DoctorController : ControllerBase
 {
     private readonly IDoctorService _doctorService;
+    private readonly IPictureService _pictureService;
 
-    public DoctorController(IDoctorService doctorService)
+    public DoctorController(IDoctorService doctorService, IPictureService pictureService)
     {
         _doctorService = doctorService;
+        _pictureService = pictureService;
     }
 
     [HttpGet("accepted-appointments/{doctorUsername}")]
@@ -86,40 +89,45 @@ public class DoctorController : ControllerBase
         return BadRequest();
     }
 
-    [HttpGet("patient-documents/{patientUsername}")]
-    public async Task<ActionResult<IEnumerable<DocumentDTO>>> ViewPatientDocuments(string patientUsername)
+    [HttpGet("credential/{doctorUsername}")]
+    public async Task<ActionResult<IEnumerable<Credential>>> ViewPatientDocuments(string doctorUsername)
     {
-        var documents = await _doctorService.ViewPatientDocuments(patientUsername);
+        var documents = await _doctorService.GetCredentialsAsync(doctorUsername);
         if (documents != null)
             return Ok(documents);
         return BadRequest();
     }
 
-    [HttpPut("credential/{doctorUsername}")]
-    public async Task<ActionResult<CredentialDTO>> UpdateDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    [HttpDelete("credential/{id}")]
+    public async Task<IActionResult> DeleteDoctorCredential(int id)
     {
-        var credential = await _doctorService.UpdateDoctorCredential(doctorUsername, doctorCredential);
-        if (credential != null)
-            return Ok(credential);
-        return BadRequest();
-    }
-
-    [HttpDelete("credential/{doctorUsername}")]
-    public async Task<IActionResult> DeleteDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
-    {
-        var result = await _doctorService.DeleteDoctorCredential(doctorUsername, doctorCredential);
+        var result = await _doctorService.DeleteCredentialAsync( id);
         if (result)
             return Ok();
         return BadRequest();
     }
 
+
     [HttpPost("credential/{doctorUsername}")]
-    public async Task<ActionResult<CredentialDTO>> AddDoctorCredential(string doctorUsername, [FromBody] CredentialDTO doctorCredential)
+    public async Task<ActionResult> uploadDocument(string doctorUsername, [FromBody] ImageUploadRequestDTO request)
     {
-        var credential = await _doctorService.AddDoctorCredential(doctorUsername, doctorCredential);
-        if (credential != null)
-            return Ok(credential);
-        return BadRequest();
+        try
+        {
+            if (request == null || string.IsNullOrEmpty(request.Base64Image))
+            {
+                return BadRequest("Invalid image data");
+            }
+
+            // Decode the base64 string to byte array
+            var imageData = Convert.FromBase64String(request.Base64Image);
+
+            var pictureUrl = await _doctorService.SaveCredintailsAsync(doctorUsername, request.FileName, imageData);
+            return Ok(new { Url = pictureUrl });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpPut("work-type/{doctorUsername}")]
