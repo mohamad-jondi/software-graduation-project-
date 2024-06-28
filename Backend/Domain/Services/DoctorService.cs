@@ -353,9 +353,29 @@ public class DoctorService : IDoctorService
         throw new NotImplementedException();
     }
 
-    public Task<bool> SnoozeDoctorAppointments(string doctorUsername, int minutes)
+    public async Task<bool> SnoozeDoctorAppointments(string doctorUsername, int minutes)
     {
-        throw new NotImplementedException();
+        var doctor = await _unitOfWork.GetRepositories<Doctor>()
+            .Get()
+            .Include(c => c.CallenderAppointments)
+            .FirstOrDefaultAsync(c => c.Username == doctorUsername);
+
+        if (doctor == null || doctor.CallenderAppointments == null)
+        {
+            return false;
+        }
+
+        var acceptedAppointments = doctor.CallenderAppointments
+            .Where(a => a.Status == AppointmentStatus.Accepted)
+            .ToList();
+
+        foreach (var appointment in acceptedAppointments)
+        {
+            appointment.Date = appointment.Date.AddMinutes(minutes);
+        }
+
+        await _unitOfWork.GetRepositories<Appointment>().UpdateRange(acceptedAppointments);
+        return true;
     }
 
     public Task<bool> MoveAppointment(int appointmentId)
