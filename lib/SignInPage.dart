@@ -68,37 +68,38 @@ class _SignInPageState extends State<SignInPage> {
                               .isAdmin;
                       if (isAdmin != null && isAdmin) {
                         AppRouter.router.push(AdminHomePage());
-                      }
-                      switch (Provider.of<AppProvider>(context, listen: false)
-                          .loggedUser
-                          .personType) {
-                        case "Patient":
-                          {
-                            await Provider.of<AppProvider>(context,
-                                    listen: false)
-                                .getDoctors();
-                            AppRouter.router.push(PatientHomePage());
-                          }
-                        case "Doctor":
-                          {
-                            var isVerified =
-                                Provider.of<AppProvider>(context, listen: false)
-                                    .loggedUser
-                                    .isVerifiedDoctor;
-                            if (isVerified != null && isVerified) {
-                              AppRouter.router.push(DoctorHomePage());
-                            } else {
-                              AppRouter.router.push(AddCredentialsPage());
+                      } else {
+                        switch (Provider.of<AppProvider>(context, listen: false)
+                            .loggedUser
+                            .personType) {
+                          case "Patient":
+                            {
+                              await Provider.of<AppProvider>(context,
+                                      listen: false)
+                                  .getDoctors();
+                              AppRouter.router.push(PatientHomePage());
                             }
-                          }
-                        case "Nurse":
-                          {
-                            AppRouter.router.push(NurseHomePage());
-                          }
-                        case "Mother":
-                          {
-                            AppRouter.router.push(MotherHomePage());
-                          }
+                          case "Doctor":
+                            {
+                              var isVerified = Provider.of<AppProvider>(context,
+                                      listen: false)
+                                  .loggedUser
+                                  .isVerifiedDoctor;
+                              if (isVerified != null && isVerified) {
+                                AppRouter.router.push(DoctorHomePage());
+                              } else {
+                                AppRouter.router.push(AddCredentialsPage());
+                              }
+                            }
+                          case "Nurse":
+                            {
+                              AppRouter.router.push(NurseHomePage());
+                            }
+                          case "Mother":
+                            {
+                              AppRouter.router.push(MotherHomePage());
+                            }
+                        }
                       }
                     }
                   }

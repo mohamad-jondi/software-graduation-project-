@@ -12,12 +12,19 @@ class API {
 
   getUnverifiedDoctors() async {
     var endpoint = "api/admin/unverified-doctors";
-    return await http.get(Uri.parse("$server/$endpoint"));
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
   }
 
   verifyDoctors(String username) async {
-    var endpoint = "api/admin/verify-doctors/$username";
-    return await http.post(Uri.parse("$server/$endpoint"));
+    var endpoint = "api/admin/verify-doctor/$username";
+    var response = await http.post(Uri.parse("$server/$endpoint"));
+    print(response.statusCode);
+    return response;
+  }
+
+  getMothersChildern(String username) async {
+    var endpoint = "api/Mother/$username/children";
+    return await http.get(Uri.parse("$server/$endpoint"));
   }
 
   rejectDoctors(String username) async {

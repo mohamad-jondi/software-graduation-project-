@@ -337,6 +337,11 @@ class AppProvider extends ChangeNotifier {
     return jsonDecode(unverifiedDoctors.body) as List<dynamic>;
   }
 
+  getChildren() async {
+    var res = await API.apis.getMothersChildern(loggedUser.username!);
+    return jsonDecode(res.body) as List<dynamic>;
+  }
+
   verifyDoctors(String username) async {
     var res = await API.apis.verifyDoctors(username);
     return res.statusCode == 200;

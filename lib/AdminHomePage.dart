@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/ApiHandler/API.dart';
 import 'package:flutter_app/App_Router/App_Router.dart';
@@ -159,18 +161,24 @@ class ManageDoctorsPage extends StatelessWidget {
               color: Color(0xFF199A8E)),
         ),
         SizedBox(height: 10),
-        FutureBuilder<List<dynamic>>(
+        FutureBuilder<dynamic>(
             future: fetchUnverifiedDoctors(),
-            builder:
-                (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return SizedBox(height: 10);
               }
               if (snapshot.hasError) {
                 return SizedBox(height: 10);
               }
+              if (!snapshot.hasData)
+                return SizedBox(
+                  height: 10,
+                );
+              print("data");
+              List<dynamic> data = snapshot.data;
+              print(data);
               return Column(
-                children: snapshot.data!.map((doctor) {
+                children: data.map((doctor) {
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 8.0),
                     child: Padding(
@@ -179,7 +187,9 @@ class ManageDoctorsPage extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 30,
-                            backgroundImage: AssetImage(doctor['image']),
+                            backgroundImage: AssetImage(
+                              "${API.apis.server}/uploads/DefualtPicture.png}",
+                            ),
                           ),
                           SizedBox(width: 16),
                           Expanded(
@@ -206,9 +216,7 @@ class ManageDoctorsPage extends StatelessWidget {
                                     doctorName: doctor['username'],
                                     doctorImage:
                                         "${API.apis.server}/uploads/DefualtPicture.png",
-                                    requestDate:
-                                        _formatDate(doctor['requestDate']),
-                                    doctorCredentials: doctor['credentials'],
+                                    doctorCredentials: doctor['credential'],
                                   ),
                                 ),
                               );
