@@ -9,46 +9,6 @@ class API {
   static API apis = API._();
   String server = "https://32d1-188-161-50-223.ngrok-free.app";
   String auth = "";
-
-  getUnverifiedDoctors() async {
-    var endpoint = "api/admin/unverified-doctors";
-    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
-  }
-
-  verifyDoctors(String username) async {
-    var endpoint = "api/admin/verify-doctor/$username";
-    var response = await http.post(Uri.parse("$server/$endpoint"));
-    print(response.statusCode);
-    return response;
-  }
-
-  getMothersChildern(String username) async {
-    var endpoint = "api/Mother/$username/children";
-    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
-  }
-
-  rejectDoctors(String username) async {
-    var endpoint = "api/admin/verify-doctors/$username?reject=true";
-    return await http.post(Uri.parse("$server/$endpoint"));
-  }
-
-  getDoctorCredientials(String username) async {
-    var endpoint = "api/doctor/credential/$username";
-    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
-  }
-
-  deleteDoctorCredientials(String id) async {
-    var endpoint = "api/doctor/credential/$id";
-    return await http.delete(Uri.parse("$server/$endpoint"));
-  }
-
-  uploadDoctorCrediential(
-      String username, String fileName, String base64File) async {
-    var endpoint = "api/doctor/credential/$username";
-    return await http.post(Uri.parse("$server/$endpoint"),
-        body: {"fileName": fileName, "base64Image": base64File});
-  }
-
   doctorSignup(Map<String, dynamic> map) async {
     // var request = http.MultipartRequest(
     //       'PUT', Uri.parse(server+""));
@@ -101,6 +61,38 @@ class API {
     return res;
   }
 
+  getChildren(String username) async {
+    return await http.get(Uri.parse("$server/api/Mother/$username/children"));
+  }
+
+  addChild(String username, Map<String, dynamic> map) async {
+    return await http.post(Uri.parse("$server/api/Mother/$username/child"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+  }
+
+  addVac(int childId, Map<String, dynamic> map) async {
+    return await http.post(
+        Uri.parse("$server/api/Mother/child/${childId}/vaccination"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+  }
+
+  deleteVac(int id) async {
+    final res =
+        await http.delete(Uri.parse("$server/api/Mother/vaccination/$id"));
+    return res;
+  }
+
+  snooze(String username, int minutes) async {
+    final res = await http.put(
+      Uri.parse(
+          "$server/api/Doctor/snooze-appointments/$username?minutes=$minutes"),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    );
+    return res;
+  }
+
   signin(Map<String, dynamic> map) async {
     try {
       final res = await http.post(Uri.parse("$server/user/login"),
@@ -121,7 +113,7 @@ class API {
       log(res.body);
       log(res.statusCode.toString());
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
@@ -132,7 +124,7 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Chat/GetChatsByUser/$username'));
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
@@ -167,6 +159,49 @@ class API {
         body: jsonEncode(map));
   }
 
+  getHistory(String username) async {
+    return await http.get(
+      Uri.parse(
+          '$server/api/Patient/ViewFullDetailsPatient?patientUsername=${username}'),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    );
+  }
+
+  checkDDI(int id, Map<String, dynamic> map) async {
+    final res = await http.post(
+        Uri.parse("$server/api/Case/case/${id}/drug-DDI-Check"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+    log(res.body);
+    return res;
+  }
+  addMed(int id, Map<String, dynamic> map) async {
+    final res = await http.post(
+        Uri.parse("$server/api/Case/case/$id/add-drug"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+    log(res.body);
+    return res;
+  }
+
+  addAllergy(String patientUsername, Map<String, dynamic> map) async {
+    return await http.post(
+        Uri.parse(
+            '$server/api/Patient/AddAllergy?patientUsername=${patientUsername}'),
+        body: jsonEncode(map),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'});
+  }
+
+  getCase(int id) async {
+    return await http.get(Uri.parse('$server/api/Case/$id'));
+  }
+
+  getNots(String username) async {
+    final res =
+        await http.get(Uri.parse("$server/User/Notifications/${username}"));
+    return res;
+  }
+
   sendMessage(String sender, String receiver, Map<String, dynamic> map) async {
     try {
       final res = await http.post(
@@ -177,7 +212,7 @@ class API {
       log(res.body);
       log(res.statusCode.toString());
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
@@ -191,7 +226,7 @@ class API {
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode(map));
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
@@ -207,7 +242,7 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Doctor/accepted-appointments/$username'));
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
@@ -218,9 +253,48 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Doctor/pending-appointments/$username'));
       return res;
-    } on Exception {
+    } on Exception catch (e) {
       // TODO
       return null;
     }
   }
+  getUnverifiedDoctors() async {
+    var endpoint = "api/admin/unverified-doctors";
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
+  }
+
+  verifyDoctors(String username) async {
+    var endpoint = "api/admin/verify-doctor/$username";
+    var response = await http.post(Uri.parse("$server/$endpoint"));
+    print(response.statusCode);
+    return response;
+  }
+
+  getMothersChildern(String username) async {
+    var endpoint = "api/Mother/$username/children";
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
+  }
+
+  rejectDoctors(String username) async {
+    var endpoint = "api/admin/verify-doctors/$username?reject=true";
+    return await http.post(Uri.parse("$server/$endpoint"));
+  }
+
+  getDoctorCredientials(String username) async {
+    var endpoint = "api/doctor/credential/$username";
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
+  }
+
+  deleteDoctorCredientials(String id) async {
+    var endpoint = "api/doctor/credential/$id";
+    return await http.delete(Uri.parse("$server/$endpoint"));
+  }
+
+  uploadDoctorCrediential(
+      String username, String fileName, String base64File) async {
+    var endpoint = "api/doctor/credential/$username";
+    return await http.post(Uri.parse("$server/$endpoint"),
+        body: {"fileName": fileName, "base64Image": base64File});
+  }
+  
 }
