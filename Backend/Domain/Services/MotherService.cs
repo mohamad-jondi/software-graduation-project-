@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Data.enums;
 using Data.Interfaces;
 using Data.Models;
 using Domain.DTOs.Appointment;
@@ -42,20 +43,20 @@ public class MotherService : IMotherService
 
     public async Task<IEnumerable<ChildDTO>> GetChildrenAsync(string motherUsername)
     {
-        var mother = await _unitOfWork.GetRepositories<Mother>().Get().Include(c=> c.childrens).FirstOrDefaultAsync(m => m.Username == motherUsername);
+        var mother = await _unitOfWork.GetRepositories<Mother>().Get().Include(c=> c.childrens).ThenInclude(c=> c.Vaccination).Include(c=> c.childrens).ThenInclude(c=> c.Appointments).FirstOrDefaultAsync(m => m.Username == motherUsername);
         if (mother == null) return null;
         return _mapper.Map<IEnumerable<ChildDTO>>(mother.childrens);
     }
 
-    public async Task<ChildDTO> UpdateChildInfo(int ChildID, ChildDTO childDTO)
+    public async Task<ChildDTO> UpdateChildInfo(int ChildID, ChildForCreationDTO childDTO)
     {
         var child = await _unitOfWork.GetRepositories<Child>().Get().FirstOrDefaultAsync(c => c.Id == ChildID);
         if (child == null) return null;
 
-        child.DateOfBirth = childDTO.DateOfBirth== null ? child.DateOfBirth :  childDTO.DateOfBirth;
+        child.DateOfBirth = childDTO.DateOfBirth== null ? child.DateOfBirth : (DateTime) childDTO.DateOfBirth;
         child.LatestRecordedWeight = childDTO.LatestRecordedWeight ?? child.LatestRecordedWeight;
         child.LatestRecordedHeight = childDTO.LatestRecordedHeight ?? child.LatestRecordedHeight;
-        child.Gender = childDTO.Gender == null?child.Gender : childDTO.Gender;
+        child.Gender = childDTO.Gender == null?child.Gender : (Gender)childDTO.Gender;
         child.Name = string.IsNullOrEmpty(childDTO.Name) ? child.Name : childDTO.Name;
 
         await _unitOfWork.GetRepositories<Child>().Update(child);

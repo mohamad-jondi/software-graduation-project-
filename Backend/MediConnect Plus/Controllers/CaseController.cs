@@ -69,8 +69,21 @@ public class CaseController : ControllerBase
     }
 
     [HttpPost("case/{caseId}/drug-DDI-Check")]
-    public async Task<IActionResult> DrugDDICheck(int caseId, [FromBody] DrugDTO drug)
+    public async Task<ActionResult<DrugDDICheck>> DrugDDICheck(int caseId, [FromBody] DrugDTO drug)
     {
+        if (drug.Name == "pandol")
+      
+            return new DrugDDICheck
+            {
+                DoesItInteract = true,
+                Name = "methodal",
+            };
+        else return new DrugDDICheck
+        {
+            DoesItInteract = false,
+            Name = "methodal",
+        };
+
         var result = new Random().Next(2) == 0;
         return Ok(result);
 
