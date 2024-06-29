@@ -26,7 +26,7 @@ public class MotherController : ControllerBase
     }
 
     [HttpPut("{childId}")]
-    public async Task<ActionResult<ChildDTO>> UpdateChildInfo(int childId, [FromBody] ChildDTO childDTO)
+    public async Task<ActionResult<ChildDTO>> UpdateChildInfo(int childId, [FromBody] ChildForCreationDTO childDTO)
     {
         var updatedChild = await _motherService.UpdateChildInfo(childId, childDTO);
         if (updatedChild != null)
@@ -61,14 +61,7 @@ public class MotherController : ControllerBase
         return BadRequest("Failed to delete child vaccination.");
     }
 
-    [HttpPost("child/{childId}/appointment")]
-    public async Task<ActionResult<AppointmentDTO>> BookAppointment(int childId, [FromBody] AppointmentDTO appointmentDTO)
-    {
-        var appointment = await _motherService.BookAppointment(childId, appointmentDTO.DoctorName, appointmentDTO);
-        if (appointment != null)
-            return Ok(appointment);
-        return BadRequest("Failed to book appointment.");
-    }
+   
 
     [HttpPut("vaccination")]
     public async Task<ActionResult<bool>> ManageChildVaccination([FromBody] VaccinationForUpdatingDTO vaccinationDTO)
@@ -79,14 +72,6 @@ public class MotherController : ControllerBase
         return BadRequest("Failed to manage the vaccination.");
     }
 
-    [HttpPut("child/{childId}/appointment")]
-    public async Task<IActionResult> ManageChildAppointment(int childId, [FromBody] AppointmentCanceltionDTO appointmentDTO)
-    {
-        var result = await _motherService.CancelChildAppointmentAsync(childId, appointmentDTO);
-        if (result)
-            return Ok();
-        return BadRequest("Failed to manage the appointment.");
-    }
 
     [HttpGet("{motherUsername}/children")]
     public async Task<ActionResult<IEnumerable<ChildDTO>>> GetChildren(string motherUsername)

@@ -5,7 +5,7 @@ using Domain.DTOs.Vaccination;
 public interface IMotherService
 {
     Task<ChildDTO> AddChildAsync(string motherUsername, ChildForCreationDTO childDTO);
-    Task<ChildDTO> UpdateChildInfo(int ChildID, ChildDTO childDTO);
+    Task<ChildDTO> UpdateChildInfo(int ChildID, ChildForCreationDTO childDTO);
     Task<VaccinationDTO> AddChildVacination(int ChildID, VaccinationDTO vacine);
     Task<bool> DeleteChildVacination (int vaccinationID);
     Task<bool> UpdateChildVaccinationAsync(VaccinationForUpdatingDTO vaccinationDTO);
