@@ -24,7 +24,7 @@ class API {
 
   getMothersChildern(String username) async {
     var endpoint = "api/Mother/$username/children";
-    return await http.get(Uri.parse("$server/$endpoint"));
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
   }
 
   rejectDoctors(String username) async {
@@ -34,7 +34,7 @@ class API {
 
   getDoctorCredientials(String username) async {
     var endpoint = "api/doctor/credential/$username";
-    return await http.get(Uri.parse("$server/$endpoint"));
+    return jsonDecode((await http.get(Uri.parse("$server/$endpoint"))).body);
   }
 
   deleteDoctorCredientials(String id) async {
