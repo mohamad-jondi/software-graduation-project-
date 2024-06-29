@@ -10,15 +10,16 @@ class Appointment {
   String? status;
   String? description;
   String? notes;
-  Appointment({
-    this.appointmentId,
-    this.date,
-    this.doctorName,
-    this.patientName,
-    this.status,
-    this.description,
-    this.notes,
-  });
+  int? caseID;
+  Appointment(
+      {this.appointmentId,
+      this.date,
+      this.doctorName,
+      this.patientName,
+      this.status,
+      this.description,
+      this.notes,
+      this.caseID});
 
   Map<String, dynamic> toMap() {
     return {
@@ -29,6 +30,7 @@ class Appointment {
       'status': status,
       'description': description,
       'notes': notes,
+      'caseID': caseID
     };
   }
 
@@ -41,7 +43,8 @@ class Appointment {
       'status': status == 'Accepted' ? 'Confirmed' : status.toString(),
       'description': description.toString(),
       'notes': notes.toString(),
-      "time": DateFormat('hh:mm a').format(date!)
+      "time": DateFormat('hh:mm a').format(date!),
+      'caseID': caseID.toString()
     };
   }
 
@@ -49,17 +52,17 @@ class Appointment {
     DateTime d = DateTime.now();
     if (map['date'] != null) {
       var a = DateTime.parse(map['date']);
-      d = DateTime(a.year, a.month, a.day, a.hour, a.second);
+      d = DateTime(a.year, a.month, a.day, a.hour, a.minute, a.second);
     }
     return Appointment(
-      appointmentId: map['appointmentId'],
-      date: d,
-      doctorName: map['doctorName'],
-      patientName: map['patientName'],
-      status: map['status'],
-      description: map['description'],
-      notes: map['notes'],
-    );
+        appointmentId: map['appointmentId'],
+        date: d,
+        doctorName: map['doctorName'],
+        patientName: map['patientName'],
+        status: map['status'],
+        description: map['description'],
+        notes: map['notes'],
+        caseID: map['caseID']);
   }
 
   String toJson() => json.encode(toMap());

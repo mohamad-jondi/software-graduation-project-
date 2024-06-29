@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/models/Not.dart';
+import 'package:flutter_app/providers/AppProvider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class NotificationPage extends StatefulWidget {
   @override
@@ -58,33 +61,58 @@ class _NotificationPageState extends State<NotificationPage> {
     List<Map<String, dynamic>> lastMonthNotifications =
         _getNotificationsByPeriod(startOfLastMonth, startOfLastWeek);
 
-    return Scaffold(
-      body: ListView(
-        children: [
-          if (todayNotifications.isNotEmpty) ...[
-            _buildSectionTitle('Today:'),
-            Divider(),
-            ...todayNotifications
-                .map((notification) => _buildNotificationCard(notification))
-                .toList(),
+    return Consumer<AppProvider>(builder: (context, provider, x) {
+      return Scaffold(
+        body: ListView(
+          children: [
+            if (provider.nots
+                .where((e) => e.date.day == DateTime.now().day)
+                .toList()
+                .isNotEmpty) ...[
+              _buildSectionTitle('Today:'),
+              Divider(),
+              ...provider.nots
+                  .where((e) => e.date.day == DateTime.now().day)
+                  .toList()
+                  .map((notification) => _buildNotificationCard(notification))
+                  .toList(),
+            ],
+            if (provider.nots
+                .where((e) =>
+                    e.date.difference(DateTime.now()).inDays > 0 &&
+                    e.date.difference(DateTime.now()).inDays <= 7)
+                .toList()
+                .isNotEmpty) ...[
+              _buildSectionTitle('Last Week:'),
+              Divider(),
+              ...provider.nots
+                  .where((e) =>
+                      e.date.difference(DateTime.now()).inDays > 0 &&
+                      e.date.difference(DateTime.now()).inDays <= 7)
+                  .toList()
+                  .map((notification) => _buildNotificationCard(notification))
+                  .toList(),
+            ],
+            if (provider.nots
+                .where((e) =>
+                    e.date.difference(DateTime.now()).inDays > 7 &&
+                    e.date.difference(DateTime.now()).inDays < 30)
+                .toList()
+                .isNotEmpty) ...[
+              _buildSectionTitle('Last Month:'),
+              Divider(),
+              ...provider.nots
+                  .where((e) =>
+                      e.date.difference(DateTime.now()).inDays > 7 &&
+                      e.date.difference(DateTime.now()).inDays < 30)
+                  .toList()
+                  .map((notification) => _buildNotificationCard(notification))
+                  .toList(),
+            ],
           ],
-          if (lastWeekNotifications.isNotEmpty) ...[
-            _buildSectionTitle('Last Week:'),
-            Divider(),
-            ...lastWeekNotifications
-                .map((notification) => _buildNotificationCard(notification))
-                .toList(),
-          ],
-          if (lastMonthNotifications.isNotEmpty) ...[
-            _buildSectionTitle('Last Month:'),
-            Divider(),
-            ...lastMonthNotifications
-                .map((notification) => _buildNotificationCard(notification))
-                .toList(),
-          ],
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 
   Widget _buildSectionTitle(String title) {
@@ -100,7 +128,7 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> notification) {
+  Widget _buildNotificationCard(Not notification) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
       decoration: BoxDecoration(
@@ -113,42 +141,47 @@ class _NotificationPageState extends State<NotificationPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              notification['title'] ?? '',
+              notification.notificationType == 0
+                  ? "Appointment Reminder"
+                  : 'New Message',
               style: TextStyle(
                 fontSize: 18,
                 color: Color(0xFF199A8E),
               ),
             ),
             SizedBox(height: 5),
-            Text(notification['body'] ?? ''),
+            Text(notification.notificationContent ?? ''),
             SizedBox(height: 10),
-            if (!notification['isRead'])
-              Align(
+            Align(
                 alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () =>
-                      _markAsRead(notifications.indexOf(notification)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color.fromARGB(255, 63, 189, 176), // Background color
-                  ),
-                  child: Text(
-                    'Mark as Read',
-                    style: TextStyle(color: Colors.white), // Text color
-                  ),
-                ),
-              ),
-            if (notification['isRead'])
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'Read',
-                  style: TextStyle(color: Colors.green),
-                ),
-              ),
+                child: Text(formatTime(notification.date))),
           ],
         ),
       ),
     );
+  }
+}
+
+String formatTime(DateTime notificationTime) {
+  final now = DateTime.now();
+  final difference = now.difference(notificationTime);
+
+  if (difference.inSeconds < 60) {
+    return 'Now';
+  } else if (difference.inMinutes < 10) {
+    return '${difference.inMinutes} minutes';
+  } else if (difference.inMinutes < 60) {
+    return '${difference.inMinutes} minutes';
+  } else if (difference.inHours < 9) {
+    return '${difference.inHours} hours';
+  } else if (difference.inHours < 24) {
+    return '${difference.inHours} hours';
+  } else {
+    final days = difference.inDays;
+    if (days == 1) {
+      return 'yesterday';
+    } else {
+      return DateFormat.yMMMMd('en').format(notificationTime);
+    }
   }
 }

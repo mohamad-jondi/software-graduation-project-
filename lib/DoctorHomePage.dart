@@ -97,7 +97,6 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       content = HomeScreen(
         upcomingAppointments: upcomingAppointments,
         pendingAppointments: pendingAppointments,
-        
         onShowAllUpcoming: () {
           Navigator.push(
             context,
@@ -277,13 +276,11 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            Text(
-              _getNextAppointmentTimeLeft(provider.aappointments),
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-            ),
+            ElevatedButton(
+                onPressed: () async {
+                  await provider.snooze();
+                },
+                child: Text("Snooze")),
             SizedBox(height: 20),
             Container(
               decoration: BoxDecoration(
@@ -305,7 +302,17 @@ class HomeScreen extends StatelessWidget {
                     SizedBox(height: 10),
                     ...provider.aappointments.map((appointment) {
                       return GestureDetector(
-                        onTap: () {AppRouter.router.push(AppointmentPage(patientName: appointment.patientName!, appointmentDate: appointment.date.toString(), appointmentStatus: appointment.status!, appointment: appointment));},
+                        onTap: () async {
+                          provider.selectedAppointment = appointment;
+                          await provider.getCase(appointment.caseID ?? 0);
+                          await provider
+                              .getAllergy(appointment.patientName ?? "");
+                          AppRouter.router.push(AppointmentPage(
+                              patientName: appointment.patientName!,
+                              appointmentDate: appointment.date.toString(),
+                              appointmentStatus: appointment.status!,
+                              appointment: appointment));
+                        },
                         child:
                             AppointmentCard(appointment: appointment.toMap()),
                       );
@@ -349,7 +356,13 @@ class HomeScreen extends StatelessWidget {
                     SizedBox(height: 10),
                     ...provider.pappointments.map((appointment) {
                       return GestureDetector(
-                        onTap: () => {AppRouter.router.push(AppointmentPage(patientName: appointment.patientName!, appointmentDate: appointment.date.toString(), appointmentStatus: appointment.status!, appointment: appointment))},
+                        onTap: () => {
+                          AppRouter.router.push(AppointmentPage(
+                              patientName: appointment.patientName!,
+                              appointmentDate: appointment.date.toString(),
+                              appointmentStatus: appointment.status!,
+                              appointment: appointment))
+                        },
                         child:
                             AppointmentCard(appointment: appointment.toMap()),
                       );
