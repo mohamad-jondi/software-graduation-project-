@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/providers/AppProvider.dart';
+import 'package:provider/provider.dart';
 
 class CheckDoctorCredentialsPage extends StatelessWidget {
   final String doctorName;
   final String doctorImage;
-  final String requestDate;
-  final String doctorCredentials;
+  final List<dynamic> doctorCredentials;
 
   const CheckDoctorCredentialsPage({
     required this.doctorName,
     required this.doctorImage,
-    required this.requestDate,
     required this.doctorCredentials,
   });
 
@@ -43,7 +43,7 @@ class CheckDoctorCredentialsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Request Date: $requestDate',
+                      'Request Date: 29/6/2024',
                       style: TextStyle(fontSize: 16),
                     ),
                   ],
@@ -59,17 +59,23 @@ class CheckDoctorCredentialsPage extends StatelessWidget {
                   color: Color(0xFF199A8E)),
             ),
             SizedBox(height: 10),
-            Text(
-              doctorCredentials,
-              style: TextStyle(fontSize: 16),
+            Column(
+              children: doctorCredentials.map((credit) {
+                print(credit);
+                return Text(credit['fileName']);
+              }).toList(),
             ),
             Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     // Handle accept action
+                    var test =
+                        await Provider.of<AppProvider>(context, listen: false)
+                            .verifyDoctors(doctorName);
+                    print(test);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
@@ -78,8 +84,10 @@ class CheckDoctorCredentialsPage extends StatelessWidget {
                   child: Text('Accept', style: TextStyle(color: Colors.white)),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle reject action
+                  onPressed: () async {
+                    // Handle accept action
+                    await Provider.of<AppProvider>(context, listen: false)
+                        .rejectDoctor(doctorName);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

@@ -330,6 +330,47 @@ class AppProvider extends ChangeNotifier {
     log(doctors.length.toString());
   }
 
+  getUnverifiedDoctors() async {
+    var unverifiedDoctors = await API.apis.getUnverifiedDoctors();
+    if (unverifiedDoctors.statusCode != 200)
+      throw Exception("something went wrong in getUnverifiedDoctors");
+    return jsonDecode(unverifiedDoctors.body) as List<dynamic>;
+  }
+
+  getChildren() async {
+    var res = await API.apis.getMothersChildern(loggedUser.username!);
+    return jsonDecode(res.body) as List<dynamic>;
+  }
+
+  verifyDoctors(String username) async {
+    var res = await API.apis.verifyDoctors(username);
+    return res.statusCode == 200;
+  }
+
+  rejectDoctor(String username) async {
+    var res = await API.apis.rejectDoctors(username);
+    return res.statusCode == 200;
+  }
+
+  getDoctorCredientials() async {
+    var doctorCredientials =
+        await API.apis.getDoctorCredientials(loggedUser.username!);
+    if (doctorCredientials.statusCode != 200)
+      throw Exception("something went wrong in getDoctorCredientials");
+    return jsonDecode(doctorCredientials.body) as List<dynamic>;
+  }
+
+  deleteDoctorCredientials(String id) async {
+    var deleteCredientials = await API.apis.deleteDoctorCredientials(id);
+    return deleteCredientials.statusCode == 200;
+  }
+
+  uploadDoctorCrediential(String fileName, String base64File) async {
+    var uploadResult = await API.apis
+        .uploadDoctorCrediential(loggedUser.username!, fileName, base64File);
+    return uploadResult.statusCode == 200;
+  }
+
   updateUser() async {
     final res = await API.apis.updateUser(<String, dynamic>{
       'username': loggedUser.username,
