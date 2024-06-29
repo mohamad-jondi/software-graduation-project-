@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/ApiHandler/API.dart';
 import 'package:flutter_app/App_Router/App_Router.dart';
 import 'package:flutter_app/CheckDoctorCredentialsPage.dart';
 import 'package:flutter_app/CheckNurseCredentialsPage.dart';
 import 'package:flutter_app/main.dart';
+import 'package:flutter_app/providers/AppProvider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_app/NotificationPage.dart';
 import 'package:flutter_app/ContactsPage.dart';
+import 'package:provider/provider.dart';
 
 import 'LoginAndSignup.dart';
 
@@ -27,6 +30,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var user = Provider.of<AppProvider>(context).loggedUser;
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
@@ -61,7 +65,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Admin Name',
+                    user.name!,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -138,6 +142,10 @@ class ManageDoctorsPage extends StatelessWidget {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
+  fetchUnverifiedDoctors() async {
+    return await API.apis.getUnverifiedDoctors() as List<dynamic>;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -151,63 +159,76 @@ class ManageDoctorsPage extends StatelessWidget {
               color: Color(0xFF199A8E)),
         ),
         SizedBox(height: 10),
-        ...doctors.map((doctor) {
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 8.0),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: AssetImage(doctor['image']),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          doctor['name'],
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Request Date: ${_formatDate(doctor['requestDate'])}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CheckDoctorCredentialsPage(
-                            doctorName: doctor['name'],
-                            doctorImage: doctor['image'],
-                            requestDate: _formatDate(doctor['requestDate']),
-                            doctorCredentials: doctor['credentials'],
+        FutureBuilder<List<dynamic>>(
+            future: fetchUnverifiedDoctors(),
+            builder:
+                (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return SizedBox(height: 10);
+              }
+              if (snapshot.hasError) {
+                return SizedBox(height: 10);
+              }
+              return Column(
+                children: snapshot.data!.map((doctor) {
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundImage: AssetImage(doctor['image']),
                           ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF199A8E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  doctor['username'],
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 8),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CheckDoctorCredentialsPage(
+                                    doctorName: doctor['username'],
+                                    doctorImage:
+                                        "${API.apis.server}/uploads/DefualtPicture.png",
+                                    requestDate:
+                                        _formatDate(doctor['requestDate']),
+                                    doctorCredentials: doctor['credentials'],
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF199A8E),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text('Check Credentials',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Text('Check Credentials',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
+                  );
+                }).toList(),
+              );
+            }),
       ],
     );
   }

@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_app/AddCredentialsPage.dart';
+import 'package:flutter_app/AdminHomePage.dart';
 import 'package:flutter_app/App_Router/App_Router.dart';
 import 'package:flutter_app/DoctorHomePage.dart';
 import 'package:flutter_app/PatientHomePage.dart';
@@ -60,6 +62,13 @@ class _SignInPageState extends State<SignInPage> {
                           .loggedUser
                           .personType
                           .toString());
+                      bool? isAdmin =
+                          Provider.of<AppProvider>(context, listen: false)
+                              .loggedUser
+                              .isAdmin;
+                      if (isAdmin != null && isAdmin) {
+                        AppRouter.router.push(AdminHomePage());
+                      }
                       switch (Provider.of<AppProvider>(context, listen: false)
                           .loggedUser
                           .personType) {
@@ -72,7 +81,15 @@ class _SignInPageState extends State<SignInPage> {
                           }
                         case "Doctor":
                           {
-                            AppRouter.router.push(DoctorHomePage());
+                            var isVerified =
+                                Provider.of<AppProvider>(context, listen: false)
+                                    .loggedUser
+                                    .isVerifiedDoctor;
+                            if (isVerified != null && isVerified) {
+                              AppRouter.router.push(DoctorHomePage());
+                            } else {
+                              AppRouter.router.push(AddCredentialsPage());
+                            }
                           }
                         case "Nurse":
                           {

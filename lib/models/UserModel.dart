@@ -8,15 +8,18 @@ class User {
   String? phoneNumber;
   String? userType;
   String? personType;
-  User({
-    this.username,
-    this.name,
-    this.email,
-    this.password,
-    this.phoneNumber,
-    this.userType,
-    this.personType,
-  });
+  bool? isAdmin;
+  bool? isVerifiedDoctor;
+  User(
+      {this.username,
+      this.name,
+      this.email,
+      this.password,
+      this.phoneNumber,
+      this.userType,
+      this.personType,
+      this.isAdmin,
+      this.isVerifiedDoctor});
 
   Map<String, dynamic> toMap() {
     return {
@@ -39,6 +42,8 @@ class User {
       phoneNumber: map['phoneNumber'],
       userType: map['userType'],
       personType: map['personType'],
+      isAdmin: map['isAdmin'],
+      isVerifiedDoctor: map['isVerifiedDoctor'],
     );
   }
 

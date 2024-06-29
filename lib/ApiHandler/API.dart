@@ -9,6 +9,39 @@ class API {
   static API apis = API._();
   String server = "https://32d1-188-161-50-223.ngrok-free.app";
   String auth = "";
+
+  getUnverifiedDoctors() async {
+    var endpoint = "api/admin/unverified-doctors";
+    return await http.get(Uri.parse("$server/$endpoint"));
+  }
+
+  verifyDoctors(String username) async {
+    var endpoint = "api/admin/verify-doctors/$username";
+    return await http.post(Uri.parse("$server/$endpoint"));
+  }
+
+  rejectDoctors(String username) async {
+    var endpoint = "api/admin/verify-doctors/$username?reject=true";
+    return await http.post(Uri.parse("$server/$endpoint"));
+  }
+
+  getDoctorCredientials(String username) async {
+    var endpoint = "api/doctor/credential/$username";
+    return await http.get(Uri.parse("$server/$endpoint"));
+  }
+
+  deleteDoctorCredientials(String id) async {
+    var endpoint = "api/doctor/credential/$id";
+    return await http.delete(Uri.parse("$server/$endpoint"));
+  }
+
+  uploadDoctorCrediential(
+      String username, String fileName, String base64File) async {
+    var endpoint = "api/doctor/credential/$username";
+    return await http.post(Uri.parse("$server/$endpoint"),
+        body: {"fileName": fileName, "base64Image": base64File});
+  }
+
   doctorSignup(Map<String, dynamic> map) async {
     // var request = http.MultipartRequest(
     //       'PUT', Uri.parse(server+""));
@@ -81,7 +114,7 @@ class API {
       log(res.body);
       log(res.statusCode.toString());
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }
@@ -92,7 +125,7 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Chat/GetChatsByUser/$username'));
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }
@@ -137,7 +170,7 @@ class API {
       log(res.body);
       log(res.statusCode.toString());
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }
@@ -151,7 +184,7 @@ class API {
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode(map));
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }
@@ -167,7 +200,7 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Doctor/accepted-appointments/$username'));
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }
@@ -178,7 +211,7 @@ class API {
       final res = await http
           .get(Uri.parse('$server/api/Doctor/pending-appointments/$username'));
       return res;
-    } on Exception catch (e) {
+    } on Exception {
       // TODO
       return null;
     }

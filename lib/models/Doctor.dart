@@ -30,9 +30,9 @@ class Doctor {
       'name': name,
       'phoneNumber': phoneNumber,
       'email': email,
-      'appointment': appointment?.map((x) => x?.toMap())?.toList(),
+      'appointment': appointment?.map((x) => x.toMap()).toList(),
       'addresses': addresses,
-      'available': available?.map((x) => x?.toMap())?.toList(),
+      'available': available?.map((x) => x.toMap()).toList(),
     };
   }
 

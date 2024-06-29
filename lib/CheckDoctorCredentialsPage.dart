@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/providers/AppProvider.dart';
+import 'package:provider/provider.dart';
 
 class CheckDoctorCredentialsPage extends StatelessWidget {
   final String doctorName;
@@ -68,8 +70,10 @@ class CheckDoctorCredentialsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     // Handle accept action
+                    await Provider.of<AppProvider>(context)
+                        .verifyDoctors(doctorName);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
@@ -78,8 +82,10 @@ class CheckDoctorCredentialsPage extends StatelessWidget {
                   child: Text('Accept', style: TextStyle(color: Colors.white)),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle reject action
+                  onPressed: () async {
+                    // Handle accept action
+                    await Provider.of<AppProvider>(context)
+                        .rejectDoctor(doctorName);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
