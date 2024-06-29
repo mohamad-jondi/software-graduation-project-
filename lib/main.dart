@@ -4,8 +4,11 @@ import 'package:flutter_app/LoginAndSignup.dart';
 import 'package:flutter_app/providers/AppProvider.dart';
 import 'package:provider/provider.dart';
 import 'Wellcome.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main()async {
+    await initializeDateFormatting('en', null);
+
   runApp(MyApp());
 }
 

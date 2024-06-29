@@ -1,20 +1,34 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/ApiHandler/API.dart';
+import 'package:flutter_app/models/Allergy.dart';
 import 'package:flutter_app/models/AppointmentDTO.dart';
 import 'package:flutter_app/models/Available.dart';
+import 'package:flutter_app/models/Case.dart';
 import 'package:flutter_app/models/ChatModel.dart';
+import 'package:flutter_app/models/Child.dart';
 import 'package:flutter_app/models/Doctor.dart';
 import 'package:flutter_app/models/Message.dart';
+import 'package:flutter_app/models/Not.dart';
 import 'package:flutter_app/models/UserModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class AppProvider extends ChangeNotifier {
+  AppProvider() {
+    Timer.periodic(Duration(seconds: 5), (timer) {
+      if (isLogged) {
+        getNots();
+      }
+      print('Running a scheduled task at ${DateTime.now()}');
+    });
+  }
+  bool isLogged = false;
   late User loggedUser;
   List<Doctor> doctors = [];
   List<Doctor> filteredDoctors = [];
@@ -27,15 +41,25 @@ class AppProvider extends ChangeNotifier {
   TextEditingController nameController = TextEditingController();
   TextEditingController messageController = TextEditingController();
   TextEditingController notesController = TextEditingController();
+  TextEditingController vnameController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController administeredDateController = TextEditingController();
+  TextEditingController shotsLeftController = TextEditingController();
   List<Appointment> aappointments = [];
   List<Appointment> pappointments = [];
   List<Chat> chats = [];
   List<Available> avs = [];
   List<Appointment> aps = [];
   List<Appointment> patientAps = [];
+  List<Child> children = [];
+  List<Not> nots = [];
   int chosenDay = 1;
   int start = 0;
   int end = 0;
+  Child? selectedChild;
+  Case? selectedCase;
+  List<Allergy> allergies = [];
+  Appointment? selectedAppointment;
   Map<String, dynamic> daysMap = {
     "Sunday": 0,
     "Monday": 1,
@@ -45,7 +69,79 @@ class AppProvider extends ChangeNotifier {
     "Friday": 5,
     "Saturday": 6,
   };
+
   String? chosenTime;
+  getAllergy(String username) async {
+    log(username);
+    final res = await API.apis.getHistory(username);
+    log(res.body);
+    log(res.statusCode.toString());
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      log(((data as Map)['allergies'] as List).toString());
+      allergies = ((data as Map)['allergies'] as List)
+          .map((e) => Allergy.fromMap(e))
+          .toList();
+    }
+  }
+
+  getCase(int id) async {
+    final res = await API.apis.getCase(id);
+    if (res.statusCode == 200) {
+      selectedCase = Case.fromJson(res.body);
+      notifyListeners();
+    }
+  }
+
+  deleteVac(int id) async {
+    final res = await API.apis.deleteVac(id);
+    if (res.statusCode == 200) {
+      selectedChild!.vaccination !=
+          selectedChild!.vaccination!
+              .where((e) => e.vaccinationID != id)
+              .toList();
+      notifyListeners();
+    }
+  }
+
+  snooze() async {
+    final res = await API.apis.snooze(loggedUser.username!, 15);
+    if (res.statusCode == 200) {
+      await getAAPointments();
+      await getPAPointments();
+      notifyListeners();
+    }
+    log(res.body);
+  }
+
+  addVacc(Map<String, dynamic> map) async {
+    final res = await API.apis.addVac(selectedChild!.id!, map);
+    if (res.statusCode == 200) {
+      await getChildren();
+      selectedChild = children.firstWhere((e) => e.id == selectedChild!.id);
+      notifyListeners();
+    }
+  }
+
+  getChildren() async {
+    final res = await API.apis.getChildren(loggedUser.username!);
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      children = (data as List).map((e) => Child.fromMap(e)).toList();
+      notifyListeners();
+    }
+  }
+
+  getNots() async {
+    final res = await API.apis.getNots(loggedUser.username!);
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      nots = (data as List).map((e) => Not.fromMap(e)).toList();
+      log(nots.first.toMap().toString());
+      notifyListeners();
+    }
+  }
+
   isUpcoming(Appointment a) {
     return (a.status == 'Accepted' || a.status == 'Pending') &&
         DateTime.now().compareTo(a.date!) < 0;
@@ -307,9 +403,13 @@ class AppProvider extends ChangeNotifier {
     if (res.statusCode == 200) {
       loggedUser = User.fromJson(res.body);
       await getChats();
+      await getNots();
+      isLogged = true;
       if (loggedUser.personType == "Doctor") {
         await getAAPointments();
         await getPAPointments();
+      } else if (loggedUser.personType == 'Mother') {
+        await getChildren();
       }
       fillControllers();
       return true;

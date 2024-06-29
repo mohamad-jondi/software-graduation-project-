@@ -23,6 +23,7 @@ class DoctorWidget extends StatelessWidget {
           await provider.getUserAvaila(doctor.username!);
           Provider.of<AppProvider>(context, listen: false).selectedDoctor =
               doctor;
+              
           AppRouter.router.push(DoctorDetailPage());
         },
         child: Card(

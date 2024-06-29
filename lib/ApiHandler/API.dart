@@ -61,6 +61,38 @@ class API {
     return res;
   }
 
+  getChildren(String username) async {
+    return await http.get(Uri.parse("$server/api/Mother/$username/children"));
+  }
+
+  addChild(String username, Map<String, dynamic> map) async {
+    return await http.post(Uri.parse("$server/api/Mother/$username/child"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+  }
+
+  addVac(int childId, Map<String, dynamic> map) async {
+    return await http.post(
+        Uri.parse("$server/api/Mother/child/${childId}/vaccination"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+  }
+
+  deleteVac(int id) async {
+    final res =
+        await http.delete(Uri.parse("$server/api/Mother/vaccination/$id"));
+    return res;
+  }
+
+  snooze(String username, int minutes) async {
+    final res = await http.put(
+      Uri.parse(
+          "$server/api/Doctor/snooze-appointments/$username?minutes=$minutes"),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    );
+    return res;
+  }
+
   signin(Map<String, dynamic> map) async {
     try {
       final res = await http.post(Uri.parse("$server/user/login"),
@@ -125,6 +157,49 @@ class API {
             '$server/api/Patient/RequestAppointment?patientUsername=${map['patientUsername']}&doctorUsername=${map['doctorUsername']}&appointmentDate=${map['appointmentDate']}&Description=${map['Description']}'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(map));
+  }
+
+  getHistory(String username) async {
+    return await http.get(
+      Uri.parse(
+          '$server/api/Patient/ViewFullDetailsPatient?patientUsername=${username}'),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    );
+  }
+
+  checkDDI(int id, Map<String, dynamic> map) async {
+    final res = await http.post(
+        Uri.parse("$server/api/Case/case/${id}/drug-DDI-Check"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+    log(res.body);
+    return res;
+  }
+  addMed(int id, Map<String, dynamic> map) async {
+    final res = await http.post(
+        Uri.parse("$server/api/Case/case/$id/add-drug"),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(map));
+    log(res.body);
+    return res;
+  }
+
+  addAllergy(String patientUsername, Map<String, dynamic> map) async {
+    return await http.post(
+        Uri.parse(
+            '$server/api/Patient/AddAllergy?patientUsername=${patientUsername}'),
+        body: jsonEncode(map),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'});
+  }
+
+  getCase(int id) async {
+    return await http.get(Uri.parse('$server/api/Case/$id'));
+  }
+
+  getNots(String username) async {
+    final res =
+        await http.get(Uri.parse("$server/User/Notifications/${username}"));
+    return res;
   }
 
   sendMessage(String sender, String receiver, Map<String, dynamic> map) async {
